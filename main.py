@@ -24,8 +24,8 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Title
-st.title("Customer Location Viewer")
-st.markdown("### Interactive Map of Customer Locations")
+st.title("Bunting-Newton")
+st.markdown("### Customer Location Viewer")
 
 # Load and clean data
 @st.cache_data
