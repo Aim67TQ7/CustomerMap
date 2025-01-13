@@ -37,7 +37,7 @@ if not st.session_state.authenticated:
     if st.button("Submit"):
         if access_code == "1Bunting!":
             st.session_state.authenticated = True
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Incorrect access code. Please try again.")
     st.stop()  # Stop execution here if not authenticated
@@ -51,13 +51,36 @@ def load_data():
 try:
     df = load_data()
 
-    # Create base map centered on average coordinates
-    center_lat = df['Latitude'].mean()
-    center_lon = df['Longitude'].mean()
+    # Sidebar filters
+    with st.sidebar:
+        st.header("Filters")
+
+        # Get unique values for filters
+        states = sorted(df['State/Prov'].unique().tolist())
+        territories = sorted(df['Territory'].unique().tolist())
+        sales_reps = sorted(df['Sales Rep'].unique().tolist())
+
+        # Add "All" option to each filter
+        selected_state = st.selectbox("Select State/Province", ["All"] + states)
+        selected_territory = st.selectbox("Select Territory", ["All"] + territories)
+        selected_sales_rep = st.selectbox("Select Sales Rep", ["All"] + sales_reps)
+
+        # Apply filters to dataframe
+        filtered_df = df.copy()
+        if selected_state != "All":
+            filtered_df = filtered_df[filtered_df['State/Prov'] == selected_state]
+        if selected_territory != "All":
+            filtered_df = filtered_df[filtered_df['Territory'] == selected_territory]
+        if selected_sales_rep != "All":
+            filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
+
+    # Create base map centered on filtered data
+    center_lat = filtered_df['Latitude'].mean()
+    center_lon = filtered_df['Longitude'].mean()
     m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
 
     # Add markers for each customer
-    for idx, row in df.iterrows():
+    for idx, row in filtered_df.iterrows():
         if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
             # Create popup content
             popup_content = f"""
@@ -81,7 +104,7 @@ try:
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
 
-    # Display the map
+    # Display the map and search
     col1, col2 = st.columns([2, 1])
 
     with col1:
@@ -92,9 +115,9 @@ try:
         search_term = st.text_input("Search by customer name:")
 
         if search_term:
-            filtered_df = df[df['Name'].str.contains(search_term, case=False, na=False)]
+            search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
 
-            for _, row in filtered_df.iterrows():
+            for _, row in search_results.iterrows():
                 with st.expander(row['Name']):
                     st.write(f"**Territory:** {row['Territory']}")
                     st.write(f"**Sales Rep:** {row['Sales Rep']}")
