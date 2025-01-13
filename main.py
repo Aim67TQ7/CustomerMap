@@ -27,6 +27,21 @@ st.markdown("""
 st.title("Bunting-Newton")
 st.markdown("### Customer Location Viewer")
 
+# Access code verification
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+# Create the access code input field
+if not st.session_state.authenticated:
+    access_code = st.text_input("Enter access code:", type="password")
+    if st.button("Submit"):
+        if access_code == "1Bunting!":
+            st.session_state.authenticated = True
+            st.experimental_rerun()
+        else:
+            st.error("Incorrect access code. Please try again.")
+    st.stop()  # Stop execution here if not authenticated
+
 # Load and clean data
 @st.cache_data
 def load_data():
@@ -35,7 +50,7 @@ def load_data():
 
 try:
     df = load_data()
-    
+
     # Create base map centered on average coordinates
     center_lat = df['Latitude'].mean()
     center_lon = df['Longitude'].mean()
@@ -58,7 +73,7 @@ try:
                 <b>Address:</b> {row['Corrected_Address']}<br>
             </div>
             """
-            
+
             folium.Marker(
                 location=[row['Latitude'], row['Longitude']],
                 popup=folium.Popup(popup_content, max_width=300),
@@ -68,17 +83,17 @@ try:
 
     # Display the map
     col1, col2 = st.columns([2, 1])
-    
+
     with col1:
         folium_static(m, width=800)
-    
+
     with col2:
         st.markdown("### Customer Search")
         search_term = st.text_input("Search by customer name:")
-        
+
         if search_term:
             filtered_df = df[df['Name'].str.contains(search_term, case=False, na=False)]
-            
+
             for _, row in filtered_df.iterrows():
                 with st.expander(row['Name']):
                     st.write(f"**Territory:** {row['Territory']}")
