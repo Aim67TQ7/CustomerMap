@@ -10,7 +10,7 @@ run = ["sh", "-c", "streamlit run main.py"]
 [workflows]
 runButton = "Project"
 
-[[workflows.workflow]]
+[[workflows.workflow]] 
 name = "Project"
 mode = "parallel"
 author = "agent"
@@ -37,3 +37,4 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 80
+ 
