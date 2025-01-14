@@ -8,7 +8,7 @@ from utils import clean_data, format_currency
 st.set_page_config(
     page_title="Customer Location Viewer",
     page_icon="🌎",
-    layout="wide"
+    layout="wide" 
 )
 
 # Add custom CSS
