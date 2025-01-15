@@ -152,6 +152,27 @@ try:
             flex-direction: row;
             gap: 1rem;
         }
+        .customer-list {
+            height: 600px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+        .customer-link {
+            display: block;
+            padding: 8px;
+            margin: 2px 0;
+            text-decoration: none;
+            color: #1e88e5;
+            cursor: pointer;
+        }
+        .customer-link:hover {
+            background-color: #f0f2f6;
+        }
+        .customer-link.selected {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -181,12 +202,21 @@ try:
         customer_list = filtered_df['Name'].sort_values().tolist()
 
         # Container for scrollable list
-        container = st.container()
-        with container:
-            for customer in customer_list:
-                if st.button(customer, key=f"btn_{customer}", use_container_width=True):
-                    st.session_state.selected_customer = customer
-                    st.rerun()
+        st.markdown('<div class="customer-list">', unsafe_allow_html=True)
+        for idx, customer in enumerate(customer_list):
+            selected_class = " selected" if customer == st.session_state.selected_customer else ""
+            st.markdown(
+                f'<div class="customer-link{selected_class}" '
+                f'onclick="parent.postMessage({{command: \'streamlit:setComponentValue\', data: \'{customer}\'}})">'
+                f'{customer}</div>',
+                unsafe_allow_html=True
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Handle customer selection
+        if st.session_state.widget_clicked:
+            st.session_state.selected_customer = st.session_state.widget_clicked
+            st.rerun()
 
     if search_term:
         search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
