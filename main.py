@@ -85,7 +85,8 @@ try:
 
         # Customer Search
         st.subheader("Customer Search")
-        search_term = st.text_input("Search by customer name:")
+        customer_names = sorted(df['Name'].unique().tolist())
+        search_term = st.selectbox("Select customer:", ["All"] + customer_names)
 
         # Get unique values for filters
         states = sorted(df['State/Prov'].unique().tolist())
@@ -231,8 +232,8 @@ try:
         st.session_state.selected_customer = st.session_state.widget_clicked
         st.rerun()
 
-    if search_term:
-        search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
+    if search_term and search_term != "All":
+        search_results = filtered_df[filtered_df['Name'] == search_term]
 
         for _, row in search_results.iterrows():
             with st.expander(row['Name']):
