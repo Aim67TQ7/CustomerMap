@@ -144,29 +144,41 @@ try:
         st.session_state.selected_customer = None
 
     with col1:
+        # Create map based on view state
         if st.session_state.selected_customer:
-            # Filter map for selected customer
             selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
-            m = folium.Map(location=[selected_data['Latitude'].iloc[0], selected_data['Longitude'].iloc[0]], zoom_start=8)
-            # Add single marker
-            row = selected_data.iloc[0]
-            popup_content = f"""
-            <div style='min-width: 200px'>
-                <h4>{row['Name']}</h4>
-                <b>Territory:</b> {row['Territory']}<br>
-                <b>Sales Rep:</b> {row['Sales Rep']}<br>
-                <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
-                <b>Address:</b> {row['Corrected_Address']}<br>
-            </div>
-            """
-            folium.Marker(
-                location=[row['Latitude'], row['Longitude']],
-                popup=folium.Popup(popup_content, max_width=300),
-                tooltip=row['Name'],
-                icon=folium.Icon(color='red', icon='info-sign')
-            ).add_to(m)
-        st.components.v1.html(m._repr_html_(), height=600)
+            if not selected_data.empty:
+                lat = selected_data['Latitude'].iloc[0]
+                lon = selected_data['Longitude'].iloc[0]
+                m = folium.Map(location=[lat, lon], zoom_start=12, min_zoom=2)
+                
+                # Add the selected marker
+                row = selected_data.iloc[0]
+                popup_content = f"""
+                <div style='min-width: 200px'>
+                    <h4>{row['Name']}</h4>
+                    <b>Territory:</b> {row['Territory']}<br>
+                    <b>Sales Rep:</b> {row['Sales Rep']}<br>
+                    <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
+                    <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
+                    <b>Address:</b> {row['Corrected_Address']}<br>
+                </div>
+                """
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=folium.Popup(popup_content, max_width=300),
+                    tooltip=row['Name'],
+                    icon=folium.Icon(color='red', icon='info-sign')
+                ).add_to(m)
+                
+                # Add bounds to control zoom
+                bounds = [[lat-0.1, lon-0.1], [lat+0.1, lon+0.1]]
+                m.fit_bounds(bounds)
+        
+        # Use a container to maintain map state
+        map_container = st.container()
+        with map_container:
+            st.components.v1.html(m._repr_html_(), height=600)
 
     with col2:
         st.markdown("### Customer List")
