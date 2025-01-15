@@ -83,6 +83,10 @@ try:
     with st.sidebar:
         st.header("Filters")
 
+        # Customer Search
+        st.subheader("Customer Search")
+        search_term = st.text_input("Search by customer name:")
+
         # Get unique values for filters
         states = sorted(df['State/Prov'].unique().tolist())
         territories = sorted(df['Territory'].unique().tolist())
@@ -132,8 +136,8 @@ try:
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
 
-    # Display the map and information columns
-    col1, col2, col3 = st.columns([2, 0.8, 0.8])
+    # Display the map and customer list
+    col1, col2 = st.columns([2, 1])
 
     with col1:
         folium_static(m, width=800)
@@ -144,10 +148,6 @@ try:
         customer_list = filtered_df['Name'].sort_values().tolist()
         for customer in customer_list:
             st.write(customer)
-
-    with col3:
-        st.markdown("### Customer Search")
-        search_term = st.text_input("Search by customer name:")
 
         if search_term:
             search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
