@@ -274,44 +274,51 @@ try:
         </script>
     """, unsafe_allow_html=True)
 
-    # Add user location finder
-    st.markdown("""
-        <script>
-        function findUserLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        // Send location to Streamlit
-                        window.parent.postMessage({
-                            type: 'streamlit:setComponentValue',
-                            value: JSON.stringify({
-                                type: 'user_location',
-                                lat: position.coords.latitude,
-                                lon: position.coords.longitude
-                            })
-                        }, '*');
-                        // Reload the page to update the map
-                        window.parent.location.reload();
-                    },
-                    function(error) {
-                        alert("Error getting location: " + error.message);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
+    # Initialize location tracking state
+    if 'location_tracking' not in st.session_state:
+        st.session_state.location_tracking = False
+
+    # Add location toggle
+    location_tracking = st.checkbox('Track My Location', value=st.session_state.location_tracking)
+    
+    if location_tracking != st.session_state.location_tracking:
+        st.session_state.location_tracking = location_tracking
+        if location_tracking:
+            st.markdown("""
+                <script>
+                function updateLocation() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                window.parent.postMessage({
+                                    type: 'streamlit:setComponentValue',
+                                    value: JSON.stringify({
+                                        type: 'user_location',
+                                        lat: position.coords.latitude,
+                                        lon: position.coords.longitude
+                                    })
+                                }, '*');
+                                setTimeout(function() {
+                                    window.parent.location.reload();
+                                }, 100);
+                            },
+                            function(error) {
+                                console.error("Error getting location:", error.message);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 5000,
+                                maximumAge: 0
+                            }
+                        );
                     }
-                );
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-        </script>
-        <button onclick="findUserLocation()" style="margin: 10px 0; padding: 8px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            <i class="fas fa-star"></i> Find My Location
-        </button>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    """, unsafe_allow_html=True)
+                }
+                updateLocation();
+                </script>
+            """, unsafe_allow_html=True)
+        else:
+            st.session_state.user_location = None
+            st.rerun()
 
     # Custom CSS for layout
     st.markdown("""
