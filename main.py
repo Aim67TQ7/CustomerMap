@@ -166,7 +166,7 @@ try:
                 tooltip=row['Name'],
                 icon=folium.Icon(color='red', icon='info-sign')
             ).add_to(m)
-        folium_static(m, width=800, height=600)
+        st.components.v1.html(m._repr_html_(), height=600)
 
     with col2:
         st.markdown("### Customer List")
