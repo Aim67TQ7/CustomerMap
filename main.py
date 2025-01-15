@@ -218,20 +218,21 @@ try:
 
         # Add prospect markers
         for index, row in prospects_df.iterrows():
-            popup_content = f"""
-                <div style='min-width: 200px'>
-                    <h4>Prospect: {row['Company Name']}</h4>
-                    <b>Address:</b> {row['address']}<br>
-                    <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
-                    <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
-                </div>
-            """
-            folium.Marker(
-                location=[row['latitude'], row['longitude']],
-                popup=folium.Popup(popup_content, max_width=300),
-                tooltip=row['Company Name'],
-                icon=folium.Icon(color='green', icon='flag', prefix='fa')
-            ).add_to(m)
+            if pd.notna(row['latitude']) and pd.notna(row['longitude']):
+                popup_content = f"""
+                    <div style='min-width: 200px'>
+                        <h4>Prospect: {row['Company Name']}</h4>
+                        <b>Address:</b> {row['address']}<br>
+                        <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
+                        <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
+                    </div>
+                """
+                folium.Marker(
+                    location=[float(row['latitude']), float(row['longitude'])],
+                    popup=folium.Popup(popup_content, max_width=300),
+                    tooltip=row['Company Name'],
+                    icon=folium.Icon(color='green', icon='flag', prefix='fa')
+                ).add_to(m)
 
 
     # Store the selected customer and widget clicked state
