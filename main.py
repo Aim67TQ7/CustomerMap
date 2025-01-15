@@ -84,9 +84,18 @@ def load_prospects():
     df_prospects['Revenue Range (in USD)'] = df_prospects['Revenue Range (in USD)'].fillna('Unknown')
     return df_prospects
 
+@st.cache_data
+def load_mai_data():
+    df_mai = pd.read_csv("attached_assets/MAI_CustomerGeoLocs.csv")
+    return clean_data(df_mai)
+
 try:
     df = load_data()
     prospects_df = load_prospects()
+    mai_df = load_mai_data()
+
+    # Add data source selector
+    data_source = st.radio("Select Data Source", ["BMC Customers", "MAI Customers"], horizontal=True)
 
     # Sidebar filters
     with st.sidebar:
@@ -187,8 +196,10 @@ try:
         center_lon = filtered_df['Longitude'].mean()
         m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
 
-        # Add markers for each customer
-        for idx, row in filtered_df.iterrows():
+        # Add markers based on selected data source
+        display_df = mai_df if data_source == "MAI Customers" else filtered_df
+        
+        for idx, row in display_df.iterrows():
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
                 # Create popup content with selection button
                 popup_content = f"""
@@ -196,10 +207,6 @@ try:
                     <h4>{row['Name']}</h4>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
-                    <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                    <b>2024:</b> {format_currency(row['$2,024 '])}<br>
-                    <b>2023:</b> {format_currency(row['$2,023 '])}<br>
-                    <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
                     <label class="toggle-switch">
@@ -230,15 +237,19 @@ try:
                 # Check if customer is in selected route
                 is_selected = any(c.get('name') == row['Name'] for c in st.session_state.get('selected_customers', []))
 
+                # Set marker color based on data source
+                marker_color = '#808080' if data_source == "MAI Customers" else 'blue'
+                fill_color = '#808080' if data_source == "MAI Customers" else ('blue' if is_selected else '#3186cc')
+                
                 folium.CircleMarker(
                     location=[row['Latitude'], row['Longitude']],
                     popup=folium.Popup(popup_content, max_width=300),
                     tooltip=row['Name'],
                     radius=radius,
-                    color='blue',
+                    color=marker_color,
                     weight=1.5,
                     fill=True,
-                    fill_color='blue' if is_selected else '#3186cc',
+                    fill_color=fill_color,
                     fill_opacity=0.7 if is_selected else 0.4,
                     opacity=1.0
                 ).add_to(m)
