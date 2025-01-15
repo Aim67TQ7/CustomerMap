@@ -139,15 +139,75 @@ try:
     # Display the map and customer list
     col1, col2 = st.columns([2, 1])
 
+    # Store the selected customer in session state
+    if 'selected_customer' not in st.session_state:
+        st.session_state.selected_customer = None
+
     with col1:
-        folium_static(m, width=800)
+        if st.session_state.selected_customer:
+            # Filter map for selected customer
+            selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
+            m = folium.Map(location=[selected_data['Latitude'].iloc[0], selected_data['Longitude'].iloc[0]], zoom_start=8)
+            # Add single marker
+            row = selected_data.iloc[0]
+            popup_content = f"""
+            <div style='min-width: 200px'>
+                <h4>{row['Name']}</h4>
+                <b>Territory:</b> {row['Territory']}<br>
+                <b>Sales Rep:</b> {row['Sales Rep']}<br>
+                <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
+                <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
+                <b>Address:</b> {row['Corrected_Address']}<br>
+            </div>
+            """
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                popup=folium.Popup(popup_content, max_width=300),
+                tooltip=row['Name'],
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+        folium_static(m, width=800, height=600)
 
     with col2:
         st.markdown("### Customer List")
         st.markdown("*Visible on map:*")
         customer_list = filtered_df['Name'].sort_values().tolist()
+        
+        # Custom CSS for the container
+        st.markdown("""
+            <style>
+            .customer-list {
+                height: 600px;
+                overflow-y: auto;
+                padding: 10px;
+                background-color: #f0f2f6;
+                border-radius: 5px;
+            }
+            .customer-item {
+                padding: 5px;
+                margin: 2px 0;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            .customer-item:hover {
+                background-color: #e0e2e6;
+            }
+            .selected {
+                background-color: #d0d2d6;
+                font-weight: bold;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # Create scrollable container
+        st.markdown('<div class="customer-list">', unsafe_allow_html=True)
         for customer in customer_list:
-            st.write(customer)
+            is_selected = st.session_state.selected_customer == customer
+            selected_class = "selected" if is_selected else ""
+            if st.markdown(f'<div class="customer-item {selected_class}">{customer}</div>', unsafe_allow_html=True):
+                st.session_state.selected_customer = customer if not is_selected else None
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if search_term:
             search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
