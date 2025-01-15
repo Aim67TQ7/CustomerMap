@@ -193,7 +193,10 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' style='margin-top: 10px; padding: 5px;'>Select for Route</button>
+                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
+                    style='margin-top: 10px; padding: 8px 16px; background-color: #4CAF50; color: white; 
+                    border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
+                    📍 Select for Route</button>
                 </div>
                 """
 
@@ -350,21 +353,65 @@ try:
         
         return route
 
-    # Add buttons for route management
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button('Clear Route'):
-            st.session_state.selected_customers = []
+    # Map container
+    selected_customers = st.session_state.get('selected_customers', [])
+
+    # Add custom CSS for the floating button
+    st.markdown("""
+        <style>
+        .floating-button-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .calculate-route-button {
+            background-color: #1E88E5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .clear-route-button {
+            background-color: #dc3545;
+            margin-right: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Create container for floating buttons
+    st.markdown("""
+        <div class='floating-button-container'>
+            <button class='calculate-route-button clear-route-button' onclick='clearRoute()'>Clear Route</button>
+            <button class='calculate-route-button' onclick='calculateRoute()'>Calculate Optimal Route</button>
+        </div>
+    """, unsafe_allow_html=True)
+
+    if st.button('Clear Route', key='hidden_clear'):
+        st.session_state.selected_customers = []
+        st.rerun()
+
+    if st.button('Calculate Optimal Route', key='hidden_calculate'):
+        if len(st.session_state.selected_customers) < 2:
+            st.warning('Please select at least 2 customers to calculate a route.')
+        else:
+            st.session_state.selected_customers = calculate_optimal_route(st.session_state.selected_customers)
             st.rerun()
-    
-    with col2:
-        if st.button('Calculate Optimal Route'):
-            if len(st.session_state.selected_customers) < 2:
-                st.warning('Please select at least 2 customers to calculate a route.')
-            else:
-                st.session_state.selected_customers = calculate_optimal_route(st.session_state.selected_customers)
-                st.rerun()
+
+    # Add JavaScript for button functionality
+    st.markdown("""
+        <script>
+        function clearRoute() {
+            document.querySelector('[data-testid="stButton"] button[key="hidden_clear"]').click();
+        }
+        function calculateRoute() {
+            document.querySelector('[data-testid="stButton"] button[key="hidden_calculate"]').click();
+        }
+        </script>
+    """, unsafe_allow_html=True)
 
     # Map container
     selected_customers = st.session_state.get('selected_customers', [])
