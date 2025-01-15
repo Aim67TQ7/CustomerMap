@@ -95,13 +95,13 @@ try:
         # Get initial unique values
         states = sorted(df['State/Prov'].unique().tolist())
 
-        # State filter
-        selected_state = st.selectbox("Select State/Province", ["All"] + states)
+        # State filter with multi-select (up to 4)
+        selected_states = st.multiselect("Select States/Provinces (max 4)", states, max_selections=4)
 
-        # Filter dataframe based on state
+        # Filter dataframe based on selected states
         filtered_df = df.copy()
-        if selected_state != "All":
-            filtered_df = filtered_df[filtered_df['State/Prov'] == selected_state]
+        if selected_states:
+            filtered_df = filtered_df[filtered_df['State/Prov'].isin(selected_states)]
 
         # Get territories based on filtered data
         territories = sorted(filtered_df['Territory'].unique().tolist())
