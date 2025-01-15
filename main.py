@@ -83,29 +83,37 @@ try:
     with st.sidebar:
         st.header("Filters")
 
-        # Customer Search
-        st.subheader("Customer Search")
-        customer_names = sorted(df['Name'].unique().tolist())
-        search_term = st.selectbox("Select customer:", ["All"] + customer_names)
-
-        # Get unique values for filters
+        # Get initial unique values
         states = sorted(df['State/Prov'].unique().tolist())
-        territories = sorted(df['Territory'].unique().tolist())
-        sales_reps = sorted(df['Sales Rep'].unique().tolist())
-
-        # Add "All" option to each filter
+        
+        # State filter
         selected_state = st.selectbox("Select State/Province", ["All"] + states)
-        selected_territory = st.selectbox("Select Territory", ["All"] + territories)
-        selected_sales_rep = st.selectbox("Select Sales Rep", ["All"] + sales_reps)
-
-        # Apply filters to dataframe
+        
+        # Filter dataframe based on state
         filtered_df = df.copy()
         if selected_state != "All":
             filtered_df = filtered_df[filtered_df['State/Prov'] == selected_state]
+        
+        # Get territories based on filtered data
+        territories = sorted(filtered_df['Territory'].unique().tolist())
+        selected_territory = st.selectbox("Select Territory", ["All"] + territories)
+        
+        # Further filter based on territory
         if selected_territory != "All":
             filtered_df = filtered_df[filtered_df['Territory'] == selected_territory]
+        
+        # Get sales reps based on filtered data
+        sales_reps = sorted(filtered_df['Sales Rep'].unique().tolist())
+        selected_sales_rep = st.selectbox("Select Sales Rep", ["All"] + sales_reps)
+        
+        # Further filter based on sales rep
         if selected_sales_rep != "All":
             filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
+        
+        # Get customer names based on all applied filters
+        customer_names = sorted(filtered_df['Name'].unique().tolist())
+        st.subheader("Customer Search")
+        search_term = st.selectbox("Select customer:", ["All"] + customer_names)
 
     # Initial locations
     initial_locations = [
