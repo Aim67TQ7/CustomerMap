@@ -225,10 +225,10 @@ try:
             ).add_to(m)
     folium_static(m, width=1200)
 
-        # Handle customer selection
-        if st.session_state.widget_clicked:
-            st.session_state.selected_customer = st.session_state.widget_clicked
-            st.rerun()
+    # Handle customer selection
+    if st.session_state.widget_clicked:
+        st.session_state.selected_customer = st.session_state.widget_clicked
+        st.rerun()
 
     if search_term:
         search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
