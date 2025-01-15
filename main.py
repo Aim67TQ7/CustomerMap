@@ -493,19 +493,16 @@ try:
     # Display the map
     folium_static(m, width=1200)
     
-    # Create container for route buttons
-    st.markdown("""
-        <div class='route-button-container'>
-            <button class='calculate-route-button clear-route-button' onclick='clearRoute()'>Clear Route</button>
-            <button class='calculate-route-button' onclick='calculateRoute()'>Calculate Optimal Route</button>
-        </div>
-    """, unsafe_allow_html=True)
-
-    if st.button('Clear Route', key='hidden_clear'):
-        st.session_state.selected_customers = []
-        st.rerun()
-
-    if st.button('Calculate Optimal Route', key='hidden_calculate'):
+    # Create buttons directly with Streamlit
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button('Clear Route', type='primary', use_container_width=True):
+            st.session_state.selected_customers = []
+            st.rerun()
+    
+    with col2:
+        if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
         if len(st.session_state.selected_customers) < 2:
             st.warning('Please select at least 2 customers to calculate a route.')
         else:
