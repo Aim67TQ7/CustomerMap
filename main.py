@@ -227,6 +227,10 @@ try:
                         <b>Address:</b> {row.get('address', 'N/A')}<br>
                         <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
                         <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
+                        <button onclick='selectCustomer("{row['Company Name']}", {row['latitude']}, {row['longitude']})' 
+                        style='margin-top: 10px; padding: 8px 16px; background-color: #4CAF50; color: white; 
+                        border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
+                        📍 Select for Route</button>
                     </div>
                 """
                 folium.Marker(
