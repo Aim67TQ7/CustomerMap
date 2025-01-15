@@ -229,10 +229,12 @@ try:
                         <b>Address:</b> {row.get('address', 'N/A')}<br>
                         <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
                         <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
-                        <button onclick='selectCustomer("{row['Company Name']}", {row['latitude']}, {row['longitude']})' 
-                        style='margin-top: 10px; padding: 8px 16px; background-color: #4CAF50; color: white; 
-                        border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
-                        📍 Select for Route</button>
+                        <label class="toggle-switch">
+                            <input type="checkbox" onclick='selectCustomer("{row['Company Name']}", {row['latitude']}, {row['longitude']})' 
+                                   data-name="{row['Company Name']}">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Add to Route</span>
+                        </label>
                     </div>
                 """
                 folium.Marker(
@@ -548,7 +550,7 @@ try:
                 st.warning('Please select at least 2 customers to calculate a route.')
             else:
                 route, distances = calculate_optimal_route(st.session_state.selected_customers)
-            st.session_state.selected_customers = route
+                st.session_state.selected_customers = route
             
             # Display route details
             st.subheader("Route Details")
