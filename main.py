@@ -106,14 +106,44 @@ try:
         if selected_sales_rep != "All":
             filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
 
-    # Create base map centered on filtered data
-    center_lat = filtered_df['Latitude'].mean()
-    center_lon = filtered_df['Longitude'].mean()
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
+    # Initial locations
+    initial_locations = [
+        {"name": "Bunting Newton 1", "lat": 37.3043, "lon": -97.4395, "address": "500 S Spencer St, Newton, KS 67114"},
+        {"name": "Bunting Newton 2", "lat": 37.3030, "lon": -97.4380, "address": "1101 S Spencer St, Newton, KS 67114"},
+        {"name": "Bunting Elk Grove", "lat": 42.0361, "lon": -87.9303, "address": "1150 Howard St, Elk Grove Village, IL 60007"},
+        {"name": "Bunting DuBois", "lat": 41.1201, "lon": -78.8391, "address": "12 Industrial Dr, DuBois, PA 15801"}
+    ]
 
-    # Add markers for each customer
-    for idx, row in filtered_df.iterrows():
-        if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
+    # Create base map
+    if not (selected_state != "All" or selected_territory != "All" or selected_sales_rep != "All" or search_term):
+        # Show only initial locations if no filters
+        center_lat = sum(loc["lat"] for loc in initial_locations) / len(initial_locations)
+        center_lon = sum(loc["lon"] for loc in initial_locations) / len(initial_locations)
+        m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
+        
+        # Add markers for initial locations
+        for loc in initial_locations:
+            popup_content = f"""
+            <div style='min-width: 200px'>
+                <h4>{loc['name']}</h4>
+                <b>Address:</b> {loc['address']}<br>
+            </div>
+            """
+            folium.Marker(
+                location=[loc['lat'], loc['lon']],
+                popup=folium.Popup(popup_content, max_width=300),
+                tooltip=loc['name'],
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+    else:
+        # Use filtered data when filters are applied
+        center_lat = filtered_df['Latitude'].mean()
+        center_lon = filtered_df['Longitude'].mean()
+        m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
+        
+        # Add markers for each customer
+        for idx, row in filtered_df.iterrows():
+            if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
             # Create popup content
             popup_content = f"""
             <div style='min-width: 200px'>
