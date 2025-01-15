@@ -209,41 +209,21 @@ try:
         </style>
     """, unsafe_allow_html=True)
 
-    # Create two-column layout
-    col1, col2 = st.columns([0.75, 0.25])
+    # Map container
+    if st.session_state.selected_customer:
+        selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
+        if not selected_data.empty:
+            lat = selected_data['Latitude'].iloc[0]
+            lon = selected_data['Longitude'].iloc[0]
+            m = folium.Map(location=[lat, lon], zoom_start=12)
 
-    with col1:
-        # Map container
-        if st.session_state.selected_customer:
-            selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
-            if not selected_data.empty:
-                lat = selected_data['Latitude'].iloc[0]
-                lon = selected_data['Longitude'].iloc[0]
-                m = folium.Map(location=[lat, lon], zoom_start=12)
-
-                # Add selected customer marker
-                folium.Marker(
-                    location=[lat, lon],
-                    popup=selected_data['Name'].iloc[0],
-                    icon=folium.Icon(color='red', icon='info-sign')
-                ).add_to(m)
-        folium_static(m, width=800)
-
-    with col2:
-        # Customer list container
-        customer_list = filtered_df['Name'].sort_values().tolist()
-        
-        # Container for scrollable list with padding
-        st.markdown('<div class="customer-list" style="padding: 0 10px;">', unsafe_allow_html=True)
-        for idx, customer in enumerate(customer_list):
-            selected_class = " selected" if customer == st.session_state.selected_customer else ""
-            st.markdown(
-                f'<div class="customer-link{selected_class}" '
-                f'onclick="parent.postMessage({{command: \'streamlit:setComponentValue\', data: \'{customer}\'}})">'
-                f'{customer}</div>',
-                unsafe_allow_html=True
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
+            # Add selected customer marker
+            folium.Marker(
+                location=[lat, lon],
+                popup=selected_data['Name'].iloc[0],
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+    folium_static(m, width=1200)
 
         # Handle customer selection
         if st.session_state.widget_clicked:
