@@ -41,7 +41,7 @@ if 'user' not in st.session_state:
 # Authentication UI
 if not st.session_state.authenticated:
     tab1, tab2 = st.tabs(["Login", "Register"])
-    
+
     with tab1:
         username = st.text_input("Username:", key="login_username")
         password = st.text_input("Password:", type="password", key="login_password")
@@ -53,7 +53,7 @@ if not st.session_state.authenticated:
                 st.rerun()
             else:
                 st.error("Invalid credentials")
-    
+
     with tab2:
         reg_username = st.text_input("Username:", key="reg_username")
         reg_password = st.text_input("Password:", type="password", key="reg_password")
@@ -67,7 +67,7 @@ if not st.session_state.authenticated:
                 st.success("Registration successful! Please login.")
             else:
                 st.error("Username already exists or is invalid")
-    
+
     st.stop()  # Stop execution here if not authenticated
 
 # Load and clean data
@@ -132,13 +132,20 @@ try:
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
 
-    # Display the map and search
-    col1, col2 = st.columns([2, 1])
+    # Display the map and information columns
+    col1, col2, col3 = st.columns([2, 0.8, 0.8])
 
     with col1:
         folium_static(m, width=800)
 
     with col2:
+        st.markdown("### Customer List")
+        st.markdown("*Visible on map:*")
+        customer_list = filtered_df['Name'].sort_values().tolist()
+        for customer in customer_list:
+            st.write(customer)
+
+    with col3:
         st.markdown("### Customer Search")
         search_term = st.text_input("Search by customer name:")
 
