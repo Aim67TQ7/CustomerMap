@@ -211,11 +211,22 @@ try:
                 </div>
                 """
 
-                folium.Marker(
+                # Calculate marker size based on 3-year spend
+                spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
+                try:
+                    spend = float(spend_str) if spend_str else 0
+                    radius = min(20, max(8, (spend / 100000))) # Scale radius between 8-20 pixels
+                except:
+                    radius = 8
+                
+                folium.CircleMarker(
                     location=[row['Latitude'], row['Longitude']],
                     popup=folium.Popup(popup_content, max_width=300),
                     tooltip=row['Name'],
-                    icon=folium.Icon(color='blue', icon='info-sign')
+                    radius=radius,
+                    color='blue',
+                    fill=True,
+                    fill_color='blue'
                 ).add_to(m)
 
         # Add prospect markers
