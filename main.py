@@ -161,7 +161,7 @@ try:
                 tooltip=row['Name'],
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
-    elif selected_state == "All" and selected_territory == "All" and selected_sales_rep == "All":
+    elif not selected_states and selected_territory == "All" and selected_sales_rep == "All":
         # Show only initial locations if no filters are applied
         center_lat = sum(loc["lat"] for loc in initial_locations) / len(initial_locations)
         center_lon = sum(loc["lon"] for loc in initial_locations) / len(initial_locations)
