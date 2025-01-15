@@ -260,13 +260,15 @@ try:
             window.addEventListener('message', function(e) {
                 if (e.data.type === 'streamlit:render') {
                     try {
-                        const componentValue = JSON.parse(e.data.componentValue);
-                        if (Array.isArray(componentValue)) {
-                            selectedCustomers.clear();
-                            componentValue.forEach(customer => {
-                                selectedCustomers.set(customer.name, customer);
-                            });
-                            updateAllButtons();
+                        if (e.data.componentValue) {
+                            const componentValue = JSON.parse(e.data.componentValue);
+                            if (Array.isArray(componentValue)) {
+                                selectedCustomers.clear();
+                                componentValue.forEach(customer => {
+                                    selectedCustomers.set(customer.name, customer);
+                                });
+                                updateAllButtons();
+                            }
                         }
                     } catch (err) {
                         console.error('Error parsing component value:', err);
@@ -546,16 +548,26 @@ try:
     
     with col2:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
-            if len(st.session_state.selected_customers) < 2:
+            if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
                 st.warning('Please select at least 2 customers to calculate a route.')
             else:
-                route, distances = calculate_optimal_route(st.session_state.selected_customers)
-                st.session_state.selected_customers = route
-            
-            # Display route details
-            st.subheader("Route Details")
-            total_distance = sum(d['distance'] for d in distances)
-            total_time = sum(d['time'] for d in distances)
+                try:
+                    route, distances = calculate_optimal_route(st.session_state.selected_customers)
+                    st.session_state.selected_customers = route
+                    
+                    # Display route details
+                    st.subheader("Route Details")
+                    total_distance = sum(d['distance'] for d in distances)
+                    total_time = sum(d['time'] for d in distances)
+                    
+                    st.write(f"Total Distance: {round(total_distance, 2)} km")
+                    st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
+                    
+                    for leg in distances:
+                        st.write(f"🚗 {leg['from']} → {leg['to']}")
+                        st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
+                except Exception as e:
+                    st.error(f"Error calculating route: {str(e)}")
             
             st.write(f"Total Distance: {round(total_distance, 2)} km")
             st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
