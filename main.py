@@ -202,11 +202,12 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
-                    data-name="{row['Name']}"
-                    style='margin-top: 10px; padding: 8px 16px; background-color: #4CAF50; color: white; 
-                    border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
-                    📍 Add to Route</button>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
+                               data-name="{row['Name']}">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Add to Route</span>
+                    </label>
                 </div>
                 """
 
@@ -279,12 +280,9 @@ try:
             }
 
             function updateButtonStyle(button, isSelected) {
-                if (isSelected) {
-                    button.style.backgroundColor = '#dc3545';
-                    button.textContent = '❌ Remove from Route';
-                } else {
-                    button.style.backgroundColor = '#4CAF50';
-                    button.textContent = '📍 Add to Route';
+                const checkbox = button.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = isSelected;
                 }
             }
 
@@ -394,6 +392,49 @@ try:
         .customer-link.selected {
             background-color: #e3f2fd;
             font-weight: bold;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            background-color: #ccc;
+            border-radius: 24px;
+            transition: .4s;
+            margin-right: 10px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            font-weight: bold;
+            color: #333;
         }
         </style>
     """, unsafe_allow_html=True)
