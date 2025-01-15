@@ -224,7 +224,7 @@ try:
                         <h4>Prospect: {row['Company Name']}</h4>
                         <b>Industry:</b> {row['Primary Industry']}<br>
                         <b>Sub-Industry:</b> {row['Primary Sub-Industry']}<br>
-                        <b>Address:</b> {row['address']}<br>
+                        <b>Address:</b> {row.get('address', 'N/A')}<br>
                         <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
                         <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
                     </div>
