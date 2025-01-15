@@ -115,7 +115,36 @@ try:
     ]
 
     # Create base map
-    if selected_state == "All" and selected_territory == "All" and selected_sales_rep == "All" and (search_term == "All" or not search_term):
+    if search_term != "All":
+        # Show only selected customer
+        customer_data = filtered_df[filtered_df['Name'] == search_term]
+        if not customer_data.empty:
+            center_lat = customer_data['Latitude'].iloc[0]
+            center_lon = customer_data['Longitude'].iloc[0]
+            m = folium.Map(location=[center_lat, center_lon], zoom_start=12)
+            
+            # Add marker for selected customer
+            row = customer_data.iloc[0]
+            popup_content = f"""
+            <div style='min-width: 200px'>
+                <h4>{row['Name']}</h4>
+                <b>Territory:</b> {row['Territory']}<br>
+                <b>Sales Rep:</b> {row['Sales Rep']}<br>
+                <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
+                <b>2024:</b> {format_currency(row['$2,024 '])}<br>
+                <b>2023:</b> {format_currency(row['$2,023 '])}<br>
+                <b>2022:</b> {format_currency(row['$2,022 '])}<br>
+                <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
+                <b>Address:</b> {row['Corrected_Address']}<br>
+            </div>
+            """
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                popup=folium.Popup(popup_content, max_width=300),
+                tooltip=row['Name'],
+                icon=folium.Icon(color='blue', icon='info-sign')
+            ).add_to(m)
+    elif selected_state == "All" and selected_territory == "All" and selected_sales_rep == "All":
         # Show only initial locations if no filters are applied
         center_lat = sum(loc["lat"] for loc in initial_locations) / len(initial_locations)
         center_lon = sum(loc["lon"] for loc in initial_locations) / len(initial_locations)
