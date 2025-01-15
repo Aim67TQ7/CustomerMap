@@ -330,10 +330,41 @@ try:
             tooltip='Your Location'
         ).add_to(m)
 
-    # Add clear route button
-    if st.button('Clear Route'):
-        st.session_state.selected_customers = []
-        st.rerun()
+    # Add route calculation function
+    def calculate_optimal_route(points):
+        if len(points) < 2:
+            return points
+        
+        # Start with first point
+        unvisited = points[1:]
+        current = points[0]
+        route = [current]
+        
+        # Find nearest neighbor repeatedly
+        while unvisited:
+            nearest = min(unvisited, key=lambda x: ((x['lat'] - current['lat'])**2 + 
+                                                   (x['lon'] - current['lon'])**2)**0.5)
+            route.append(nearest)
+            current = nearest
+            unvisited.remove(nearest)
+        
+        return route
+
+    # Add buttons for route management
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button('Clear Route'):
+            st.session_state.selected_customers = []
+            st.rerun()
+    
+    with col2:
+        if st.button('Calculate Optimal Route'):
+            if len(st.session_state.selected_customers) < 2:
+                st.warning('Please select at least 2 customers to calculate a route.')
+            else:
+                st.session_state.selected_customers = calculate_optimal_route(st.session_state.selected_customers)
+                st.rerun()
 
     # Map container
     selected_customers = st.session_state.get('selected_customers', [])
