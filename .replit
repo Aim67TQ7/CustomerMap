@@ -6,7 +6,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "gce"
-run = ["sh", "-c", "streamlit run --server.address 0.0.0.0 --server.port 5000 --server.headless true --server.enableCORS=false --server.enableWebsocketCompression=false main.py"]
+run = ["python", "-m", "streamlit", "run", "--server.address", "0.0.0.0", "--server.port", "5000", "--server.headless", "true", "--server.enableCORS=false", "--server.enableWebsocketCompression=false", "main.py"]
 
 [workflows]
 runButton = "Project"
