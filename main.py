@@ -109,9 +109,8 @@ try:
     # Initial locations
     initial_locations = [
         {"name": "Bunting-Newton", "lat": 37.3043, "lon": -97.4395, "address": "500 S Spencer St, Newton, KS 67114"},
-        {"name": "Two-Piece Can Facility", "lat": 37.3030, "lon": -97.4380, "address": "1101 S Spencer St, Newton, KS 67114"},
         {"name": "Bunting Elk Grove", "lat": 42.0361, "lon": -87.9303, "address": "1150 Howard St, Elk Grove Village, IL 60007"},
-        {"name": "Bunting DuBois", "lat": 41.1201, "lon": -78.8391, "address": "12 Industrial Dr, DuBois, PA 15801"}
+        {"name": "Bunting-Magnet Applications", "lat": 41.1201, "lon": -78.8391, "address": "12 Industrial Dr, DuBois, PA 15801"}
     ]
 
     # Create base map
