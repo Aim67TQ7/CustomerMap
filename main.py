@@ -115,8 +115,8 @@ try:
     ]
 
     # Create base map
-    if not (selected_state != "All" or selected_territory != "All" or selected_sales_rep != "All" or search_term):
-        # Show only initial locations if no filters
+    if selected_state == "All" and selected_territory == "All" and selected_sales_rep == "All" and (search_term == "All" or not search_term):
+        # Show only initial locations if no filters are applied
         center_lat = sum(loc["lat"] for loc in initial_locations) / len(initial_locations)
         center_lon = sum(loc["lon"] for loc in initial_locations) / len(initial_locations)
         m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
