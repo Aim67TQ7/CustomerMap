@@ -61,10 +61,12 @@ if not st.session_state.authenticated:
         if st.button("Register"):
             if reg_password != reg_password2:
                 st.error("Passwords don't match")
+            elif not reg_username.endswith('@buntingmagnetics.com'):
+                st.error("Username must be a valid @buntingmagnetics.com email address")
             elif register_user(reg_username, reg_password):
                 st.success("Registration successful! Please login.")
             else:
-                st.error("Username already exists")
+                st.error("Username already exists or is invalid")
     
     st.stop()  # Stop execution here if not authenticated
 

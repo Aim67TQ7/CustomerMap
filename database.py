@@ -20,7 +20,12 @@ def init_db():
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
+def validate_bunting_email(email: str) -> bool:
+    return email.endswith('@buntingmagnetics.com')
+
 def register_user(username: str, password: str, is_admin: bool = False) -> bool:
+    if not validate_bunting_email(username):
+        return False
     try:
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
