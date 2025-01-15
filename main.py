@@ -237,6 +237,30 @@ try:
         </script>
     """, unsafe_allow_html=True)
     
+    # Add user location finder
+    st.markdown("""
+        <script>
+        function findUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    // Send location to Streamlit
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: JSON.stringify({
+                            type: 'user_location',
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude
+                        })
+                    }, '*');
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+        </script>
+        <button onclick="findUserLocation()" style="margin: 10px 0; padding: 5px;">Find My Location</button>
+    """, unsafe_allow_html=True)
+
     # Custom CSS for layout
     st.markdown("""
         <style>
@@ -276,9 +300,20 @@ try:
         </style>
     """, unsafe_allow_html=True)
 
-    # Initialize selected customers in session state
+    # Initialize session state variables
     if 'selected_customers' not in st.session_state:
         st.session_state.selected_customers = []
+    if 'user_location' not in st.session_state:
+        st.session_state.user_location = None
+
+    # Add user location marker if available
+    if st.session_state.user_location:
+        folium.Marker(
+            location=[st.session_state.user_location['lat'], st.session_state.user_location['lon']],
+            popup='Your Location',
+            icon=folium.Icon(color='green', icon='user', prefix='fa'),
+            tooltip='Your Location'
+        ).add_to(m)
 
     # Add clear route button
     if st.button('Clear Route'):
