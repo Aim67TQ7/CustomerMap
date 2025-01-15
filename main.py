@@ -143,83 +143,50 @@ try:
     # Custom CSS for layout
     st.markdown("""
         <style>
-        .map-container {
-            position: relative;
-            width: 75%;
-            float: left;
-            padding-right: 0;
+        .stApp {
+            margin: 0;
+            padding: 0;
         }
-        .list-container {
-            position: relative;
-            width: 25%;
-            float: right;
-            height: 600px;
-            overflow-y: auto;
-            background: white;
-            padding: 10px;
-            border-left: 1px solid #ddd;
-        }
-        .customer-link {
-            display: block;
-            padding: 8px;
-            text-decoration: none;
-            color: #1f77b4;
-            border-bottom: 1px solid #eee;
-        }
-        .customer-link:hover {
-            background: #f5f5f5;
-        }
-        .customer-link.selected {
-            background: #e6f3ff;
-            font-weight: bold;
+        .main {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Create container divs
-    st.markdown('<div class="map-container">', unsafe_allow_html=True)
-    # Update map based on selection
-    if st.session_state.selected_customer:
-        selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
-        if not selected_data.empty:
-            lat = selected_data['Latitude'].iloc[0]
-            lon = selected_data['Longitude'].iloc[0]
-            m = folium.Map(location=[lat, lon], zoom_start=12)
+    # Create two-column layout
+    col1, col2 = st.columns([0.75, 0.25])
 
-            # Add selected customer marker
-            folium.Marker(
-                location=[lat, lon],
-                popup=selected_data['Name'].iloc[0],
-                icon=folium.Icon(color='red', icon='info-sign')
-            ).add_to(m)
+    with col1:
+        # Map container
+        if st.session_state.selected_customer:
+            selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
+            if not selected_data.empty:
+                lat = selected_data['Latitude'].iloc[0]
+                lon = selected_data['Longitude'].iloc[0]
+                m = folium.Map(location=[lat, lon], zoom_start=12)
 
-        folium_static(m)
-    st.markdown('</div>', unsafe_allow_html=True)
+                # Add selected customer marker
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=selected_data['Name'].iloc[0],
+                    icon=folium.Icon(color='red', icon='info-sign')
+                ).add_to(m)
+        folium_static(m, width=800)
 
-    # Customer list container
-    st.markdown('<div class="list-container">', unsafe_allow_html=True)
-    st.markdown("### Customer List")
-    customer_list = filtered_df['Name'].sort_values().tolist()
+    with col2:
+        # Customer list container
+        st.markdown("### Customer List")
+        customer_list = filtered_df['Name'].sort_values().tolist()
 
-    # Create customer links
-    for customer in customer_list:
-        is_selected = customer == st.session_state.selected_customer
-        selected_class = " selected" if is_selected else ""
-        
-        if st.markdown(f'<a href="#" class="customer-link{selected_class}" onclick="streamlit_click(\'{customer}\')">{customer}</a>', unsafe_allow_html=True):
-            if st.session_state.selected_customer == customer:
-                st.session_state.selected_customer = None
-            else:
-                st.session_state.selected_customer = customer
-                selected_data = filtered_df[filtered_df['Name'] == customer].iloc[0]
-                st.markdown(f"""
-                    **Territory:** {selected_data['Territory']}<br>
-                    **Sales Rep:** {selected_data['Sales Rep']}<br>
-                    **3-year Spend:** {format_currency(selected_data['3-year Spend'])}
-                """, unsafe_allow_html=True)
-            st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Container for scrollable list
+        container = st.container()
+        with container:
+            for customer in customer_list:
+                if st.button(customer, key=f"btn_{customer}", use_container_width=True):
+                    st.session_state.selected_customer = customer
+                    st.rerun()
 
     if search_term:
         search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
