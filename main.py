@@ -27,19 +27,45 @@ st.markdown("""
 st.title("Bunting-Newton")
 st.markdown("### Customer Location Viewer")
 
-# Access code verification
+from database import init_db, register_user, verify_user
+
+# Initialize database
+init_db()
+
+# Session state initialization
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
+if 'user' not in st.session_state:
+    st.session_state.user = None
 
-# Create the access code input field
+# Authentication UI
 if not st.session_state.authenticated:
-    access_code = st.text_input("Enter access code:", type="password")
-    if st.button("Submit"):
-        if access_code == "1Bunting!":
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("Incorrect access code. Please try again.")
+    tab1, tab2 = st.tabs(["Login", "Register"])
+    
+    with tab1:
+        username = st.text_input("Username:", key="login_username")
+        password = st.text_input("Password:", type="password", key="login_password")
+        if st.button("Login"):
+            user = verify_user(username, password)
+            if user:
+                st.session_state.authenticated = True
+                st.session_state.user = user
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+    
+    with tab2:
+        reg_username = st.text_input("Username:", key="reg_username")
+        reg_password = st.text_input("Password:", type="password", key="reg_password")
+        reg_password2 = st.text_input("Confirm Password:", type="password")
+        if st.button("Register"):
+            if reg_password != reg_password2:
+                st.error("Passwords don't match")
+            elif register_user(reg_username, reg_password):
+                st.success("Registration successful! Please login.")
+            else:
+                st.error("Username already exists")
+    
     st.stop()  # Stop execution here if not authenticated
 
 # Load and clean data
