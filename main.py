@@ -503,10 +503,10 @@ try:
     
     with col2:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
-        if len(st.session_state.selected_customers) < 2:
-            st.warning('Please select at least 2 customers to calculate a route.')
-        else:
-            route, distances = calculate_optimal_route(st.session_state.selected_customers)
+            if len(st.session_state.selected_customers) < 2:
+                st.warning('Please select at least 2 customers to calculate a route.')
+            else:
+                route, distances = calculate_optimal_route(st.session_state.selected_customers)
             st.session_state.selected_customers = route
             
             # Display route details
