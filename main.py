@@ -144,47 +144,28 @@ try:
         st.session_state.selected_customer = None
 
     with col1:
-        # Create map based on view state
+        # Update map based on selection
         if st.session_state.selected_customer:
             selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
             if not selected_data.empty:
                 lat = selected_data['Latitude'].iloc[0]
                 lon = selected_data['Longitude'].iloc[0]
-                m = folium.Map(location=[lat, lon], zoom_start=12, min_zoom=2)
-                
-                # Add the selected marker
-                row = selected_data.iloc[0]
-                popup_content = f"""
-                <div style='min-width: 200px'>
-                    <h4>{row['Name']}</h4>
-                    <b>Territory:</b> {row['Territory']}<br>
-                    <b>Sales Rep:</b> {row['Sales Rep']}<br>
-                    <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                    <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
-                    <b>Address:</b> {row['Corrected_Address']}<br>
-                </div>
-                """
+                m = folium.Map(location=[lat, lon], zoom_start=12)
+
+                # Add selected customer marker
                 folium.Marker(
                     location=[lat, lon],
-                    popup=folium.Popup(popup_content, max_width=300),
-                    tooltip=row['Name'],
+                    popup=selected_data['Name'].iloc[0],
                     icon=folium.Icon(color='red', icon='info-sign')
                 ).add_to(m)
-                
-                # Add bounds to control zoom
-                bounds = [[lat-0.1, lon-0.1], [lat+0.1, lon+0.1]]
-                m.fit_bounds(bounds)
-        
-        # Use a container to maintain map state
-        map_container = st.container()
-        with map_container:
-            st.components.v1.html(m._repr_html_(), height=600)
+
+        folium_static(m, width=800)
 
     with col2:
         st.markdown("### Customer List")
         st.markdown("*Visible on map:*")
         customer_list = filtered_df['Name'].sort_values().tolist()
-        
+
         # Custom CSS for the container
         st.markdown("""
             <style>
@@ -210,15 +191,27 @@ try:
             }
             </style>
         """, unsafe_allow_html=True)
-        
+
         # Create scrollable container
         st.markdown('<div class="customer-list">', unsafe_allow_html=True)
         for customer in customer_list:
-            is_selected = st.session_state.selected_customer == customer
-            selected_class = "selected" if is_selected else ""
-            if st.markdown(f'<div class="customer-item {selected_class}">{customer}</div>', unsafe_allow_html=True):
-                st.session_state.selected_customer = customer if not is_selected else None
+            is_selected = customer == st.session_state.selected_customer
+            css_class = "customer-item" + (" selected" if is_selected else "")
+
+            if st.button(customer, key=f"btn_{customer}", use_container_width=True):
+                if st.session_state.selected_customer == customer:
+                    st.session_state.selected_customer = None
+                else:
+                    st.session_state.selected_customer = customer
                 st.rerun()
+
+            if is_selected:
+                customer_data = filtered_df[filtered_df['Name'] == customer].iloc[0]
+                st.write(f"**Territory:** {customer_data['Territory']}")
+                st.write(f"**Sales Rep:** {customer_data['Sales Rep']}")
+                st.write(f"**3-year Spend:** {format_currency(customer_data['3-year Spend'])}")
+
+
         st.markdown('</div>', unsafe_allow_html=True)
 
         if search_term:
