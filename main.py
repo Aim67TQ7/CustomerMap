@@ -222,6 +222,8 @@ try:
                 popup_content = f"""
                     <div style='min-width: 200px'>
                         <h4>Prospect: {row['Company Name']}</h4>
+                        <b>Industry:</b> {row['Primary Industry']}<br>
+                        <b>Sub-Industry:</b> {row['Primary Sub-Industry']}<br>
                         <b>Address:</b> {row['address']}<br>
                         <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
                         <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
