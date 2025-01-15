@@ -566,17 +566,10 @@ try:
                     for leg in distances:
                         st.write(f"🚗 {leg['from']} → {leg['to']}")
                         st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
+                    
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error calculating route: {str(e)}")
-            
-            st.write(f"Total Distance: {round(total_distance, 2)} km")
-            st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
-            
-            for leg in distances:
-                st.write(f"🚗 {leg['from']} → {leg['to']}")
-                st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
-            
-            st.rerun()
 
     # Add JavaScript for button functionality
     st.markdown("""
