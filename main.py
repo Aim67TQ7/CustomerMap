@@ -221,16 +221,16 @@ try:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-        if search_term:
-            search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
+    if search_term:
+        search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
 
-            for _, row in search_results.iterrows():
-                with st.expander(row['Name']):
-                    st.write(f"**Territory:** {row['Territory']}")
-                    st.write(f"**Sales Rep:** {row['Sales Rep']}")
-                    st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
-                    st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
-                    st.write(f"**Address:** {row['Corrected_Address']}")
+        for _, row in search_results.iterrows():
+            with st.expander(row['Name']):
+                st.write(f"**Territory:** {row['Territory']}")
+                st.write(f"**Sales Rep:** {row['Sales Rep']}")
+                st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
+                st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
+                st.write(f"**Address:** {row['Corrected_Address']}")
 
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
