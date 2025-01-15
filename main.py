@@ -470,15 +470,13 @@ try:
         if not selected_data.empty:
             lat = selected_data['Latitude'].iloc[0]
             lon = selected_data['Longitude'].iloc[0]
-            m = folium.Map(location=[lat, lon], zoom_start=12)
-
+            
             # Add selected customer marker
             folium.Marker(
                 location=[lat, lon],
                 popup=selected_data['Name'].iloc[0],
                 icon=folium.Icon(color='red', icon='info-sign')
             ).add_to(m)
-    folium_static(m, width=1200)
 
     # Handle customer selection
     if st.session_state.widget_clicked:
