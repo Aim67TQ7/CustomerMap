@@ -181,7 +181,7 @@ try:
         # Add markers for each customer
         for idx, row in filtered_df.iterrows():
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
-                # Create popup content
+                # Create popup content with selection button
                 popup_content = f"""
                 <div style='min-width: 200px'>
                     <h4>{row['Name']}</h4>
@@ -193,6 +193,7 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
+                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' style='margin-top: 10px; padding: 5px;'>Select for Route</button>
                 </div>
                 """
 
@@ -209,6 +210,33 @@ try:
     if 'widget_clicked' not in st.session_state:
         st.session_state.widget_clicked = None
 
+    # Add JavaScript for customer selection and route planning
+    st.markdown("""
+        <script>
+            var selectedCustomers = [];
+            
+            function selectCustomer(name, lat, lon) {
+                if (selectedCustomers.length >= 10) {
+                    alert('Maximum 10 customers can be selected for routing');
+                    return;
+                }
+                
+                selectedCustomers.push({name: name, lat: lat, lon: lon});
+                updateRoute();
+            }
+            
+            function updateRoute() {
+                if (selectedCustomers.length >= 2) {
+                    // Send selected customers to Streamlit
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: JSON.stringify(selectedCustomers)
+                    }, '*');
+                }
+            }
+        </script>
+    """, unsafe_allow_html=True)
+    
     # Custom CSS for layout
     st.markdown("""
         <style>
@@ -248,7 +276,31 @@ try:
         </style>
     """, unsafe_allow_html=True)
 
+    # Initialize selected customers in session state
+    if 'selected_customers' not in st.session_state:
+        st.session_state.selected_customers = []
+
+    # Add clear route button
+    if st.button('Clear Route'):
+        st.session_state.selected_customers = []
+        st.rerun()
+
     # Map container
+    selected_customers = st.session_state.get('selected_customers', [])
+    
+    # Draw routes if customers are selected
+    if len(selected_customers) >= 2:
+        # Create route coordinates
+        coordinates = [(c['lat'], c['lon']) for c in selected_customers]
+        
+        # Draw route line
+        folium.PolyLine(
+            coordinates,
+            weight=2,
+            color='red',
+            opacity=0.8
+        ).add_to(m)
+
     if st.session_state.selected_customer:
         selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
         if not selected_data.empty:
