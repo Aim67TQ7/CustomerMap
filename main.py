@@ -242,23 +242,38 @@ try:
         <script>
         function findUserLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    // Send location to Streamlit
-                    window.parent.postMessage({
-                        type: 'streamlit:setComponentValue',
-                        value: JSON.stringify({
-                            type: 'user_location',
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude
-                        })
-                    }, '*');
-                });
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Send location to Streamlit
+                        window.parent.postMessage({
+                            type: 'streamlit:setComponentValue',
+                            value: JSON.stringify({
+                                type: 'user_location',
+                                lat: position.coords.latitude,
+                                lon: position.coords.longitude
+                            })
+                        }, '*');
+                        // Reload the page to update the map
+                        window.parent.location.reload();
+                    },
+                    function(error) {
+                        alert("Error getting location: " + error.message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
             } else {
                 alert("Geolocation is not supported by this browser.");
             }
         }
         </script>
-        <button onclick="findUserLocation()" style="margin: 10px 0; padding: 5px;">Find My Location</button>
+        <button onclick="findUserLocation()" style="margin: 10px 0; padding: 8px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <i class="fas fa-star"></i> Find My Location
+        </button>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     """, unsafe_allow_html=True)
 
     # Custom CSS for layout
