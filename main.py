@@ -230,7 +230,7 @@ try:
                 location=[row['latitude'], row['longitude']],
                 popup=folium.Popup(popup_content, max_width=300),
                 tooltip=row['Company Name'],
-                icon=folium.Icon(color='green', icon='info-sign')
+                icon=folium.Icon(color='green', icon='flag', prefix='fa')
             ).add_to(m)
 
 
