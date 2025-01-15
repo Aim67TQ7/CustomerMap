@@ -390,14 +390,14 @@ try:
     # Map container
     selected_customers = st.session_state.get('selected_customers', [])
 
-    # Add custom CSS for the floating button
+    # Add custom CSS for route buttons
     st.markdown("""
         <style>
-        .floating-button-container {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
+        .route-button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
         }
         .calculate-route-button {
             background-color: #1E88E5;
@@ -411,14 +411,16 @@ try:
         }
         .clear-route-button {
             background-color: #dc3545;
-            margin-right: 10px;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Create container for floating buttons
+    # Display the map
+    folium_static(m, width=1200)
+    
+    # Create container for route buttons
     st.markdown("""
-        <div class='floating-button-container'>
+        <div class='route-button-container'>
             <button class='calculate-route-button clear-route-button' onclick='clearRoute()'>Clear Route</button>
             <button class='calculate-route-button' onclick='calculateRoute()'>Calculate Optimal Route</button>
         </div>
