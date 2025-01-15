@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import folium
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
 from utils import clean_data, format_currency
 
 # Page configuration
@@ -561,7 +561,7 @@ try:
     """, unsafe_allow_html=True)
 
     # Display the map
-    folium_static(m, width=1200)
+    st_folium(m, width=1200)
 
     # Create buttons directly with Streamlit
     col1, col2 = st.columns(2)
