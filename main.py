@@ -211,13 +211,17 @@ try:
                 </div>
                 """
 
-                # Calculate marker size based on 3-year spend
+                # Calculate marker size based on 3-year spend with improved scaling
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
                 try:
                     spend = float(spend_str) if spend_str else 0
-                    radius = min(20, max(8, (spend / 100000))) # Scale radius between 8-20 pixels
+                    # Logarithmic scaling for better proportion visualization
+                    radius = min(35, max(10, 5 * (1 + log(1 + spend/10000, 10))))
                 except:
-                    radius = 8
+                    radius = 10
+                
+                # Check if customer is in selected route
+                is_selected = any(c.get('name') == row['Name'] for c in st.session_state.get('selected_customers', []))
                 
                 folium.CircleMarker(
                     location=[row['Latitude'], row['Longitude']],
@@ -225,8 +229,11 @@ try:
                     tooltip=row['Name'],
                     radius=radius,
                     color='blue',
+                    weight=2,
                     fill=True,
-                    fill_color='blue'
+                    fill_color='blue' if is_selected else '#3186cc',
+                    fill_opacity=0.7 if is_selected else 0.4,
+                    opacity=1.0
                 ).add_to(m)
 
         # Add prospect markers
