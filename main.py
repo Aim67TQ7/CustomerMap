@@ -76,8 +76,17 @@ def load_data():
     df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
     return clean_data(df)
 
+# Load and prepare prospects data
+@st.cache_data
+def load_prospects():
+    df_prospects = pd.read_csv("attached_assets/prospectlist.csv")
+    df_prospects = df_prospects[df_prospects['latitude'].notna() & df_prospects['longitude'].notna()]
+    df_prospects['Revenue Range (in USD)'] = df_prospects['Revenue Range (in USD)'].fillna('Unknown')
+    return df_prospects
+
 try:
     df = load_data()
+    prospects_df = load_prospects()
 
     # Sidebar filters
     with st.sidebar:
@@ -85,31 +94,31 @@ try:
 
         # Get initial unique values
         states = sorted(df['State/Prov'].unique().tolist())
-        
+
         # State filter
         selected_state = st.selectbox("Select State/Province", ["All"] + states)
-        
+
         # Filter dataframe based on state
         filtered_df = df.copy()
         if selected_state != "All":
             filtered_df = filtered_df[filtered_df['State/Prov'] == selected_state]
-        
+
         # Get territories based on filtered data
         territories = sorted(filtered_df['Territory'].unique().tolist())
         selected_territory = st.selectbox("Select Territory", ["All"] + territories)
-        
+
         # Further filter based on territory
         if selected_territory != "All":
             filtered_df = filtered_df[filtered_df['Territory'] == selected_territory]
-        
+
         # Get sales reps based on filtered data
         sales_reps = sorted(filtered_df['Sales Rep'].unique().tolist())
         selected_sales_rep = st.selectbox("Select Sales Rep", ["All"] + sales_reps)
-        
+
         # Further filter based on sales rep
         if selected_sales_rep != "All":
             filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
-        
+
         # Get customer names based on all applied filters
         customer_names = sorted(filtered_df['Name'].unique().tolist())
         st.subheader("Customer Search")
@@ -130,7 +139,7 @@ try:
             center_lat = customer_data['Latitude'].iloc[0]
             center_lon = customer_data['Longitude'].iloc[0]
             m = folium.Map(location=[center_lat, center_lon], zoom_start=12)
-            
+
             # Add marker for selected customer
             row = customer_data.iloc[0]
             popup_content = f"""
@@ -207,6 +216,24 @@ try:
                     icon=folium.Icon(color='blue', icon='info-sign')
                 ).add_to(m)
 
+        # Add prospect markers
+        for index, row in prospects_df.iterrows():
+            popup_content = f"""
+                <div style='min-width: 200px'>
+                    <h4>Prospect: {row['Company Name']}</h4>
+                    <b>Address:</b> {row['Address']}<br>
+                    <b>Revenue Range:</b> {row['Revenue Range (in USD)']}<br>
+                    <b>Website:</b> <a href='{row['Website']}' target='_blank'>{row['Website']}</a><br>
+                </div>
+            """
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup=folium.Popup(popup_content, max_width=300),
+                tooltip=row['Company Name'],
+                icon=folium.Icon(color='green', icon='info-sign')
+            ).add_to(m)
+
+
     # Store the selected customer and widget clicked state
     if 'selected_customer' not in st.session_state:
         st.session_state.selected_customer = None
@@ -217,17 +244,17 @@ try:
     st.markdown("""
         <script>
             var selectedCustomers = [];
-            
+
             function selectCustomer(name, lat, lon) {
                 if (selectedCustomers.length >= 10) {
                     alert('Maximum 10 customers can be selected for routing');
                     return;
                 }
-                
+
                 selectedCustomers.push({name: name, lat: lat, lon: lon});
                 updateRoute();
             }
-            
+
             function updateRoute() {
                 if (selectedCustomers.length >= 2) {
                     // Send selected customers to Streamlit
@@ -239,7 +266,7 @@ try:
             }
         </script>
     """, unsafe_allow_html=True)
-    
+
     # Add user location finder
     st.markdown("""
         <script>
@@ -337,12 +364,12 @@ try:
     def calculate_optimal_route(points):
         if len(points) < 2:
             return points
-        
+
         # Start with first point
         unvisited = points[1:]
         current = points[0]
         route = [current]
-        
+
         # Find nearest neighbor repeatedly
         while unvisited:
             nearest = min(unvisited, key=lambda x: ((x['lat'] - current['lat'])**2 + 
@@ -350,7 +377,7 @@ try:
             route.append(nearest)
             current = nearest
             unvisited.remove(nearest)
-        
+
         return route
 
     # Map container
@@ -415,12 +442,12 @@ try:
 
     # Map container
     selected_customers = st.session_state.get('selected_customers', [])
-    
+
     # Draw routes if customers are selected
     if len(selected_customers) >= 2:
         # Create route coordinates
         coordinates = [(c['lat'], c['lon']) for c in selected_customers]
-        
+
         # Draw route line
         folium.PolyLine(
             coordinates,
