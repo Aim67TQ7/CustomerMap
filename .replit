@@ -6,6 +6,12 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "gce"
+
+[env]
+PYTHONPATH = "/home/runner/${REPL_SLUG}"
+PIP_USER = "0"
+REPLIT_DISABLE_PACKAGE_LAYER = "1"
+
 run = ["python", "-m", "streamlit", "run", "--server.address", "0.0.0.0", "--server.port", "5000", "--server.headless", "true", "--server.enableCORS=false", "--server.enableWebsocketCompression=false", "main.py"]
 
 [workflows]
