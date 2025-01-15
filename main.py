@@ -178,9 +178,9 @@ try:
 
     # Create container divs
     st.markdown('<div class="map-container">', unsafe_allow_html=True)
-        # Update map based on selection
-        if st.session_state.selected_customer:
-            selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
+    # Update map based on selection
+    if st.session_state.selected_customer:
+        selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
             if not selected_data.empty:
                 lat = selected_data['Latitude'].iloc[0]
                 lon = selected_data['Longitude'].iloc[0]
