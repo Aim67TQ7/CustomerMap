@@ -156,15 +156,18 @@ try:
             height: 600px;
             overflow-y: auto;
             border: 1px solid #eee;
-            margin-top: 10px;
+            margin-top: 0;
+            font-size: 0.5em;
+            background: white;
         }
         .customer-link {
             display: block;
-            padding: 8px;
-            margin: 2px 0;
+            padding: 4px 8px;
+            margin: 1px 0;
             text-decoration: none;
             color: #1e88e5;
             cursor: pointer;
+            font-size: 14px;
         }
         .customer-link:hover {
             background-color: #f0f2f6;
