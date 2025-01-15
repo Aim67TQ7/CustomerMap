@@ -120,7 +120,7 @@ try:
         center_lat = sum(loc["lat"] for loc in initial_locations) / len(initial_locations)
         center_lon = sum(loc["lon"] for loc in initial_locations) / len(initial_locations)
         m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
-        
+
         # Add markers for initial locations
         for loc in initial_locations:
             popup_content = f"""
@@ -140,7 +140,7 @@ try:
         center_lat = filtered_df['Latitude'].mean()
         center_lon = filtered_df['Longitude'].mean()
         m = folium.Map(location=[center_lat, center_lon], zoom_start=4)
-        
+
         # Add markers for each customer
         for idx, row in filtered_df.iterrows():
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
@@ -166,9 +166,11 @@ try:
                     icon=folium.Icon(color='blue', icon='info-sign')
                 ).add_to(m)
 
-    # Store the selected customer in session state
+    # Store the selected customer and widget clicked state
     if 'selected_customer' not in st.session_state:
         st.session_state.selected_customer = None
+    if 'widget_clicked' not in st.session_state:
+        st.session_state.widget_clicked = None
 
     # Custom CSS for layout
     st.markdown("""
