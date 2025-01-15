@@ -136,14 +136,48 @@ try:
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(m)
 
-    # Display the map and customer list
-    col1, col2 = st.columns([2, 1])
-
     # Store the selected customer in session state
     if 'selected_customer' not in st.session_state:
         st.session_state.selected_customer = None
 
-    with col1:
+    # Custom CSS for layout
+    st.markdown("""
+        <style>
+        .map-container {
+            position: relative;
+            width: 75%;
+            float: left;
+            padding-right: 0;
+        }
+        .list-container {
+            position: relative;
+            width: 25%;
+            float: right;
+            height: 600px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-left: 1px solid #ddd;
+        }
+        .customer-link {
+            display: block;
+            padding: 8px;
+            text-decoration: none;
+            color: #1f77b4;
+            border-bottom: 1px solid #eee;
+        }
+        .customer-link:hover {
+            background: #f5f5f5;
+        }
+        .customer-link.selected {
+            background: #e6f3ff;
+            font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Create container divs
+    st.markdown('<div class="map-container">', unsafe_allow_html=True)
         # Update map based on selection
         if st.session_state.selected_customer:
             selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
@@ -159,60 +193,33 @@ try:
                     icon=folium.Icon(color='red', icon='info-sign')
                 ).add_to(m)
 
-        folium_static(m, width=800)
+        folium_static(m)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    with col2:
-        st.markdown("### Customer List")
-        st.markdown("*Visible on map:*")
-        customer_list = filtered_df['Name'].sort_values().tolist()
+    # Customer list container
+    st.markdown('<div class="list-container">', unsafe_allow_html=True)
+    st.markdown("### Customer List")
+    customer_list = filtered_df['Name'].sort_values().tolist()
 
-        # Custom CSS for the container
-        st.markdown("""
-            <style>
-            .customer-list {
-                height: 600px;
-                overflow-y: auto;
-                padding: 10px;
-                background-color: #f0f2f6;
-                border-radius: 5px;
-            }
-            .customer-item {
-                padding: 5px;
-                margin: 2px 0;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-            .customer-item:hover {
-                background-color: #e0e2e6;
-            }
-            .selected {
-                background-color: #d0d2d6;
-                font-weight: bold;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+    # Create customer links
+    for customer in customer_list:
+        is_selected = customer == st.session_state.selected_customer
+        selected_class = " selected" if is_selected else ""
+        
+        if st.markdown(f'<a href="#" class="customer-link{selected_class}" onclick="streamlit_click(\'{customer}\')">{customer}</a>', unsafe_allow_html=True):
+            if st.session_state.selected_customer == customer:
+                st.session_state.selected_customer = None
+            else:
+                st.session_state.selected_customer = customer
+                selected_data = filtered_df[filtered_df['Name'] == customer].iloc[0]
+                st.markdown(f"""
+                    **Territory:** {selected_data['Territory']}<br>
+                    **Sales Rep:** {selected_data['Sales Rep']}<br>
+                    **3-year Spend:** {format_currency(selected_data['3-year Spend'])}
+                """, unsafe_allow_html=True)
+            st.rerun()
 
-        # Create scrollable container
-        st.markdown('<div class="customer-list">', unsafe_allow_html=True)
-        for customer in customer_list:
-            is_selected = customer == st.session_state.selected_customer
-            css_class = "customer-item" + (" selected" if is_selected else "")
-
-            if st.button(customer, key=f"btn_{customer}", use_container_width=True):
-                if st.session_state.selected_customer == customer:
-                    st.session_state.selected_customer = None
-                else:
-                    st.session_state.selected_customer = customer
-                st.rerun()
-
-            if is_selected:
-                customer_data = filtered_df[filtered_df['Name'] == customer].iloc[0]
-                st.write(f"**Territory:** {customer_data['Territory']}")
-                st.write(f"**Sales Rep:** {customer_data['Sales Rep']}")
-                st.write(f"**3-year Spend:** {format_currency(customer_data['3-year Spend'])}")
-
-
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
         if search_term:
             search_results = filtered_df[filtered_df['Name'].str.contains(search_term, case=False, na=False)]
