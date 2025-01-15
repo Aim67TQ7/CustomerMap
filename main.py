@@ -211,25 +211,32 @@ try:
                 </div>
                 """
 
-                # Calculate marker size based on 3-year spend with improved scaling
+                # Calculate marker size based on 3-year spend thresholds
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
                 try:
                     spend = float(spend_str) if spend_str else 0
-                    # Logarithmic scaling for better proportion visualization
-                    radius = min(35, max(10, 5 * (1 + log(1 + spend/10000, 10))))
+                    # Set radius based on spend categories
+                    if spend > 500000:
+                        radius = 30  # Largest size
+                    elif spend > 100000:
+                        radius = 22  # Second largest
+                    elif spend > 50000:
+                        radius = 15  # Medium size
+                    else:
+                        radius = 8   # Smallest size
                 except:
-                    radius = 10
-                
+                    radius = 8  # Default size for parsing errors
+
                 # Check if customer is in selected route
                 is_selected = any(c.get('name') == row['Name'] for c in st.session_state.get('selected_customers', []))
-                
+
                 folium.CircleMarker(
                     location=[row['Latitude'], row['Longitude']],
                     popup=folium.Popup(popup_content, max_width=300),
                     tooltip=row['Name'],
                     radius=radius,
                     color='blue',
-                    weight=2,
+                    weight=1.5,
                     fill=True,
                     fill_color='blue' if is_selected else '#3186cc',
                     fill_opacity=0.7 if is_selected else 0.4,
@@ -273,7 +280,7 @@ try:
     st.markdown("""
         <script>
             var selectedCustomers = new Map();
-            
+
             // Initialize selected customers from session state
             window.addEventListener('message', function(e) {
                 if (e.data.type === 'streamlit:render') {
@@ -318,12 +325,12 @@ try:
                     }
                     selectedCustomers.set(name, {name: name, lat: lat, lon: lon});
                 }
-                
+
                 // Update all buttons with the same name
                 document.querySelectorAll(`button[data-name="${name}"]`).forEach(button => {
                     updateButtonStyle(button, selectedCustomers.has(name));
                 });
-                
+
                 // Send updated selection to Streamlit
                 window.parent.postMessage({
                     type: 'streamlit:setComponentValue',
@@ -339,7 +346,7 @@ try:
 
     # Add location toggle
     location_tracking = st.checkbox('Track My Location', value=st.session_state.location_tracking)
-    
+
     if location_tracking != st.session_state.location_tracking:
         st.session_state.location_tracking = location_tracking
         if location_tracking:
@@ -480,15 +487,15 @@ try:
     def calculate_distance(lat1, lon1, lat2, lon2):
         from math import sin, cos, sqrt, atan2, radians
         R = 6371  # Earth's radius in kilometers
-        
+
         lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
         dlat = lat2 - lat1
         dlon = lon2 - lon1
-        
+
         a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
         c = 2 * atan2(sqrt(a), sqrt(1-a))
         distance = R * c
-        
+
         return distance
 
     def calculate_optimal_route(points):
@@ -505,14 +512,14 @@ try:
         while unvisited:
             min_dist = float('inf')
             nearest = None
-            
+
             for point in unvisited:
                 dist = calculate_distance(current['lat'], current['lon'], 
                                        point['lat'], point['lon'])
                 if dist < min_dist:
                     min_dist = dist
                     nearest = point
-            
+
             route.append(nearest)
             distances.append({
                 'from': current['name'],
@@ -555,15 +562,15 @@ try:
 
     # Display the map
     folium_static(m, width=1200)
-    
+
     # Create buttons directly with Streamlit
     col1, col2 = st.columns(2)
-    
+
     with col1:
         if st.button('Clear Route', type='primary', use_container_width=True):
             st.session_state.selected_customers = []
             st.rerun()
-    
+
     with col2:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
             if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
@@ -572,19 +579,19 @@ try:
                 try:
                     route, distances = calculate_optimal_route(st.session_state.selected_customers)
                     st.session_state.selected_customers = route
-                    
+
                     # Display route details
                     st.subheader("Route Details")
                     total_distance = sum(d['distance'] for d in distances)
                     total_time = sum(d['time'] for d in distances)
-                    
+
                     st.write(f"Total Distance: {round(total_distance, 2)} km")
                     st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
-                    
+
                     for leg in distances:
                         st.write(f"🚗 {leg['from']} → {leg['to']}")
                         st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
-                    
+
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error calculating route: {str(e)}")
@@ -622,7 +629,7 @@ try:
         if not selected_data.empty:
             lat = selected_data['Latitude'].iloc[0]
             lon = selected_data['Longitude'].iloc[0]
-            
+
             # Add selected customer marker
             folium.Marker(
                 location=[lat, lon],
