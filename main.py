@@ -252,6 +252,41 @@ try:
     st.markdown("""
         <script>
             var selectedCustomers = new Map();
+            
+            // Initialize selected customers from session state
+            window.addEventListener('message', function(e) {
+                if (e.data.type === 'streamlit:render') {
+                    try {
+                        const componentValue = JSON.parse(e.data.componentValue);
+                        if (Array.isArray(componentValue)) {
+                            selectedCustomers.clear();
+                            componentValue.forEach(customer => {
+                                selectedCustomers.set(customer.name, customer);
+                            });
+                            updateAllButtons();
+                        }
+                    } catch (err) {
+                        console.error('Error parsing component value:', err);
+                    }
+                }
+            });
+
+            function updateAllButtons() {
+                document.querySelectorAll('button[data-name]').forEach(button => {
+                    const name = button.getAttribute('data-name');
+                    updateButtonStyle(button, selectedCustomers.has(name));
+                });
+            }
+
+            function updateButtonStyle(button, isSelected) {
+                if (isSelected) {
+                    button.style.backgroundColor = '#dc3545';
+                    button.textContent = '❌ Remove from Route';
+                } else {
+                    button.style.backgroundColor = '#4CAF50';
+                    button.textContent = '📍 Add to Route';
+                }
+            }
 
             function selectCustomer(name, lat, lon) {
                 if (selectedCustomers.has(name)) {
@@ -263,28 +298,17 @@ try:
                     }
                     selectedCustomers.set(name, {name: name, lat: lat, lon: lon});
                 }
-                updateRoute();
                 
-                // Toggle button style
-                const buttons = document.querySelectorAll(`button[data-name="${name}"]`);
-                buttons.forEach(button => {
-                    if (selectedCustomers.has(name)) {
-                        button.style.backgroundColor = '#dc3545';
-                        button.textContent = '❌ Remove from Route';
-                    } else {
-                        button.style.backgroundColor = '#4CAF50';
-                        button.textContent = '📍 Add to Route';
-                    }
+                // Update all buttons with the same name
+                document.querySelectorAll(`button[data-name="${name}"]`).forEach(button => {
+                    updateButtonStyle(button, selectedCustomers.has(name));
                 });
-            }
-
-            function updateRoute() {
-                if (selectedCustomers.size >= 2) {
-                    window.parent.postMessage({
-                        type: 'streamlit:setComponentValue',
-                        value: JSON.stringify(Array.from(selectedCustomers.values()))
-                    }, '*');
-                }
+                
+                // Send updated selection to Streamlit
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: JSON.stringify(Array.from(selectedCustomers.values()))
+                }, '*');
             }
         </script>
     """, unsafe_allow_html=True)
