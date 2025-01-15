@@ -156,7 +156,7 @@ try:
             height: 600px;
             overflow-y: auto;
             border: 1px solid #eee;
-            padding: 10px;
+            margin-top: 10px;
         }
         .customer-link {
             display: block;
@@ -198,11 +198,10 @@ try:
 
     with col2:
         # Customer list container
-        st.markdown("### Customer List")
         customer_list = filtered_df['Name'].sort_values().tolist()
-
-        # Container for scrollable list
-        st.markdown('<div class="customer-list">', unsafe_allow_html=True)
+        
+        # Container for scrollable list with padding
+        st.markdown('<div class="customer-list" style="padding: 0 10px;">', unsafe_allow_html=True)
         for idx, customer in enumerate(customer_list):
             selected_class = " selected" if customer == st.session_state.selected_customer else ""
             st.markdown(
