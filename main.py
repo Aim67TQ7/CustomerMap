@@ -203,9 +203,10 @@ try:
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
                     <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
+                    data-name="{row['Name']}"
                     style='margin-top: 10px; padding: 8px 16px; background-color: #4CAF50; color: white; 
                     border: none; border-radius: 4px; cursor: pointer; font-weight: bold;'>
-                    📍 Select for Route</button>
+                    📍 Add to Route</button>
                 </div>
                 """
 
@@ -250,24 +251,38 @@ try:
     # Add JavaScript for customer selection and route planning
     st.markdown("""
         <script>
-            var selectedCustomers = [];
+            var selectedCustomers = new Map();
 
             function selectCustomer(name, lat, lon) {
-                if (selectedCustomers.length >= 10) {
-                    alert('Maximum 10 customers can be selected for routing');
-                    return;
+                if (selectedCustomers.has(name)) {
+                    selectedCustomers.delete(name);
+                } else {
+                    if (selectedCustomers.size >= 8) {
+                        alert('Maximum 8 locations can be selected for routing');
+                        return;
+                    }
+                    selectedCustomers.set(name, {name: name, lat: lat, lon: lon});
                 }
-
-                selectedCustomers.push({name: name, lat: lat, lon: lon});
                 updateRoute();
+                
+                // Toggle button style
+                const buttons = document.querySelectorAll(`button[data-name="${name}"]`);
+                buttons.forEach(button => {
+                    if (selectedCustomers.has(name)) {
+                        button.style.backgroundColor = '#dc3545';
+                        button.textContent = '❌ Remove from Route';
+                    } else {
+                        button.style.backgroundColor = '#4CAF50';
+                        button.textContent = '📍 Add to Route';
+                    }
+                });
             }
 
             function updateRoute() {
-                if (selectedCustomers.length >= 2) {
-                    // Send selected customers to Streamlit
+                if (selectedCustomers.size >= 2) {
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
-                        value: JSON.stringify(selectedCustomers)
+                        value: JSON.stringify(Array.from(selectedCustomers.values()))
                     }, '*');
                 }
             }
@@ -375,24 +390,53 @@ try:
         ).add_to(m)
 
     # Add route calculation function
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        from math import sin, cos, sqrt, atan2, radians
+        R = 6371  # Earth's radius in kilometers
+        
+        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        distance = R * c
+        
+        return distance
+
     def calculate_optimal_route(points):
         if len(points) < 2:
-            return points
+            return points, []
 
         # Start with first point
         unvisited = points[1:]
         current = points[0]
         route = [current]
+        distances = []
 
         # Find nearest neighbor repeatedly
         while unvisited:
-            nearest = min(unvisited, key=lambda x: ((x['lat'] - current['lat'])**2 + 
-                                                   (x['lon'] - current['lon'])**2)**0.5)
+            min_dist = float('inf')
+            nearest = None
+            
+            for point in unvisited:
+                dist = calculate_distance(current['lat'], current['lon'], 
+                                       point['lat'], point['lon'])
+                if dist < min_dist:
+                    min_dist = dist
+                    nearest = point
+            
             route.append(nearest)
+            distances.append({
+                'from': current['name'],
+                'to': nearest['name'],
+                'distance': round(min_dist, 2),
+                'time': round(min_dist / 65 * 60, 1)  # Assuming 65 km/h average speed
+            })
             current = nearest
             unvisited.remove(nearest)
 
-        return route
+        return route, distances
 
     # Map container
     selected_customers = st.session_state.get('selected_customers', [])
@@ -441,7 +485,21 @@ try:
         if len(st.session_state.selected_customers) < 2:
             st.warning('Please select at least 2 customers to calculate a route.')
         else:
-            st.session_state.selected_customers = calculate_optimal_route(st.session_state.selected_customers)
+            route, distances = calculate_optimal_route(st.session_state.selected_customers)
+            st.session_state.selected_customers = route
+            
+            # Display route details
+            st.subheader("Route Details")
+            total_distance = sum(d['distance'] for d in distances)
+            total_time = sum(d['time'] for d in distances)
+            
+            st.write(f"Total Distance: {round(total_distance, 2)} km")
+            st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
+            
+            for leg in distances:
+                st.write(f"🚗 {leg['from']} → {leg['to']}")
+                st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
+            
             st.rerun()
 
     # Add JavaScript for button functionality
