@@ -101,37 +101,64 @@ try:
     with st.sidebar:
         st.header("Filters")
         
-        # Add Places API search
-        st.subheader("Find Nearby Manufacturers")
-        search_address = st.text_input("Enter address to search around:")
-        search_radius = st.number_input("Search radius (miles):", 1, 50, 10)
-        
-        if st.button("Search Nearby"):
+        # Add nearby prospects search
+        st.subheader("Search Nearby Prospects")
+        show_nearby_prospects = st.toggle("Enable Nearby Prospects Search")
+        if show_nearby_prospects:
+            search_address = st.text_input("Enter address to search around:")
+            search_radius = st.slider("Search radius (miles):", 10, 50, 25)
+            
             if search_address:
-                from places_api import geocode_address, fetch_nearby_manufacturers
+                from places_api import geocode_address
                 location = geocode_address(search_address)
                 if location:
-                    manufacturers = fetch_nearby_manufacturers(location, search_radius)
-                    if manufacturers:
-                        # Add markers for found manufacturers
-                        for mfg in manufacturers:
+                    # Calculate distances and filter prospects
+                    from math import radians, sin, cos, sqrt, atan2
+                    
+                    def calculate_distance(lat1, lon1, lat2, lon2):
+                        R = 3959  # Earth's radius in miles
+                        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+                        dlat = lat2 - lat1
+                        dlon = lon2 - lon1
+                        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                        c = 2 * atan2(sqrt(a), sqrt(1-a))
+                        return R * c
+                    
+                    nearby_prospects = []
+                    for _, prospect in prospects_df.iterrows():
+                        if pd.notna(prospect['latitude']) and pd.notna(prospect['longitude']):
+                            distance = calculate_distance(
+                                location['lat'], location['lng'],
+                                prospect['latitude'], prospect['longitude']
+                            )
+                            if distance <= search_radius:
+                                nearby_prospects.append({
+                                    'name': prospect['Company Name'],
+                                    'distance': distance,
+                                    'data': prospect
+                                })
+                    
+                    if nearby_prospects:
+                        st.success(f"Found {len(nearby_prospects)} prospects within {search_radius} miles")
+                        for prospect in nearby_prospects:
                             popup_content = f"""
                             <div style='min-width: 200px'>
-                                <h4>{mfg['Name']}</h4>
-                                <b>Address:</b> {mfg['Address']}<br>
-                                <b>Rating:</b> {mfg['Rating']}<br>
-                                <b>Phone:</b> {mfg['Phone']}<br>
-                                <b>Website:</b> <a href='{mfg['Website']}' target='_blank'>{mfg['Website']}</a><br>
+                                <h4>Prospect: {prospect['data']['Company Name']}</h4>
+                                <b>Industry:</b> {prospect['data']['Primary Industry']}<br>
+                                <b>Sub-Industry:</b> {prospect['data']['Primary Sub-Industry']}<br>
+                                <b>Distance:</b> {round(prospect['distance'], 1)} miles<br>
+                                <b>Revenue Range:</b> {prospect['data']['Revenue Range (in USD)']}<br>
+                                <b>Website:</b> <a href='{prospect['data']['Website']}' target='_blank'>{prospect['data']['Website']}</a><br>
                             </div>
                             """
                             folium.Marker(
-                                location=[mfg['Latitude'], mfg['Longitude']],
+                                location=[float(prospect['data']['latitude']), float(prospect['data']['longitude'])],
                                 popup=folium.Popup(popup_content, max_width=300),
-                                tooltip=mfg['Name'],
-                                icon=folium.Icon(color='purple', icon='industry', prefix='fa')
+                                tooltip=f"{prospect['data']['Company Name']} ({round(prospect['distance'], 1)} mi)",
+                                icon=folium.Icon(color='green', icon='flag', prefix='fa')
                             ).add_to(m)
                     else:
-                        st.warning("No manufacturers found in the specified radius.")
+                        st.warning(f"No prospects found within {search_radius} miles of the specified location.")
                 else:
                     st.error("Could not geocode the provided address.")
 
