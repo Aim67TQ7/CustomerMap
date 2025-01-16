@@ -100,8 +100,10 @@ try:
 
         # Filter dataframe based on selected states
         filtered_df = df.copy()
+        filtered_prospects_df = prospects_df.copy()
         if selected_states:
             filtered_df = filtered_df[filtered_df['State/Prov'].isin(selected_states)]
+            filtered_prospects_df = filtered_prospects_df[filtered_prospects_df['State'].isin(selected_states)]
 
         # Get territories based on filtered data
         territories = sorted(filtered_df['Territory'].unique().tolist())
@@ -244,7 +246,7 @@ try:
                 ).add_to(m)
 
         # Add prospect markers
-        for index, row in prospects_df.iterrows():
+        for index, row in filtered_prospects_df.iterrows():
             if pd.notna(row['latitude']) and pd.notna(row['longitude']):
                 popup_content = f"""
                     <div style='min-width: 200px'>
@@ -345,7 +347,7 @@ try:
         st.session_state.location_tracking = False
 
     # Add location toggle
-    location_tracking = st.checkbox('Track My Location', value=st.session_state.location_tracking)
+    location_tracking = st.checkbox('Show My Location', value=st.session_state.location_tracking)
 
     if location_tracking != st.session_state.location_tracking:
         st.session_state.location_tracking = location_tracking
