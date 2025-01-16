@@ -192,8 +192,8 @@ try:
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
                 # Create popup content with selection button
                 popup_content = f"""
-                <div style='min-width: 200px; cursor: pointer;' onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>
-                    <h4 style="cursor: pointer;" ondblclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
+                <div style='min-width: 200px'>
+                    <h4 style="cursor: pointer;" onclick='selectCustomerDetails("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
@@ -310,14 +310,17 @@ try:
                 }
             }
 
-            function selectCustomer(name, lat, lon) {
-                // Send customer details to Streamlit
+            function selectCustomerDetails(name, lat, lon) {
+                // Send only customer details to Streamlit
                 window.parent.streamlit.setComponentValue({
                     type: 'customer_details',
                     name: name,
                     lat: lat,
                     lon: lon
                 });
+            }
+
+            function selectCustomer(name, lat, lon) {
                 
                 // Also add to route planning
                 const customer = {name: name, lat: lat, lon: lon};
@@ -767,16 +770,8 @@ try:
     else:
         details_placeholder.info("Select customers on the map to view their details here.")
 
-    if search_term and search_term != "All":
-        search_results = filtered_df[filtered_df['Name'] == search_term]
-
-        for _, row in search_results.iterrows():
-            with st.expander(row['Name']):
-                st.write(f"**Territory:** {row['Territory']}")
-                st.write(f"**Sales Rep:** {row['Sales Rep']}")
-                st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
-                st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
-                st.write(f"**Address:** {row['Corrected_Address']}")
+    # Customer details are now handled by the selectCustomer function
+    pass
 
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
