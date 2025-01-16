@@ -190,8 +190,21 @@ try:
         # Add markers for each customer
         for idx, row in filtered_df.iterrows():
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
-                from map_handlers import create_customer_popup
-                popup_content = create_customer_popup(row, format_currency)
+                # Create popup content with selection button
+                popup_content = f"""
+                <div style='min-width: 200px'>
+                    <h4 style="cursor: pointer;" ondblclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
+                    <b>Territory:</b> {row['Territory']}<br>
+                    <b>Sales Rep:</b> {row['Sales Rep']}<br>
+                    <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
+                    <b>2024:</b> {format_currency(row['$2,024 '])}<br>
+                    <b>2023:</b> {format_currency(row['$2,023 '])}<br>
+                    <b>2022:</b> {format_currency(row['$2,022 '])}<br>
+                    <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
+                    <b>Address:</b> {row['Corrected_Address']}<br>
+                    <small style="color: #666;">(Double-click company name to plan route)</small>
+                </div>
+                """
 
                 # Calculate marker size based on 3-year spend thresholds
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
@@ -298,34 +311,21 @@ try:
             }
 
             function selectCustomer(name, lat, lon) {
-                // Handle both customer details and route planning
+                // Add customer to selected customers for route planning
                 const customer = {name: name, lat: lat, lon: lon};
                 
-                // Send customer details immediately
-                window.parent.streamlit.setComponentValue({
-                    type: 'customer_details',
-                    name: name,
-                    lat: lat,
-                    lon: lon
-                });
-                
-                // Add to route planning if not already selected
-                if (!selectedCustomers.has(name)) {
+                if (selectedCustomers.has(name)) {
+                    selectedCustomers.delete(name);
+                } else {
                     if (selectedCustomers.size >= 8) {
                         alert('Maximum 8 locations can be selected for routing');
                         return;
                     }
                     selectedCustomers.set(name, customer);
-                    
-                    // Update route selection
-                    const selectedArray = Array.from(selectedCustomers.values());
-                    setTimeout(() => {
-                        window.parent.streamlit.setComponentValue({
-                            type: 'route_selection',
-                            customers: selectedArray
-                        });
-                    }, 100);
                 }
+
+                // Send updated selection to Streamlit
+                const selectedArray = Array.from(selectedCustomers.values());
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue({
                         type: 'route_selection',
@@ -486,12 +486,12 @@ try:
             if isinstance(selected, str):
                 selected = eval(selected)
             if isinstance(selected, dict):
-                if selected.get('type') == 'customer_details':
-                    st.session_state.selected_customer = selected.get('name')
-                    st.rerun()
-                elif selected.get('type') == 'route_selection':
+                if selected.get('type') == 'route_selection':
                     customers = selected.get('customers', [])
                     st.session_state.selected_customers = customers
+                    if customers:
+                        # Select the first customer in the route for details display
+                        st.session_state.selected_customer = customers[0]['name']
                     st.rerun()
         except Exception as e:
             st.error(f"Error handling selection: {str(e)}")
@@ -590,7 +590,7 @@ try:
         st.session_state.show_supplier_cards = False
     
     # Create buttons directly with Streamlit
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button('Clear Route', type='primary', use_container_width=True):
@@ -599,6 +599,14 @@ try:
             st.rerun()
 
     with col2:
+        if st.button('Evaluate Route', type='primary', use_container_width=True):
+            if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 1:
+                st.warning('Please select at least one supplier to evaluate.')
+            else:
+                st.session_state.show_supplier_cards = True
+                st.rerun()
+
+    with col3:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
             if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
                 st.warning('Please select at least 2 customers to calculate a route.')
@@ -758,8 +766,16 @@ try:
     else:
         details_placeholder.info("Select customers on the map to view their details here.")
 
-    # Customer details are now handled by the selectCustomer function
-    pass
+    if search_term and search_term != "All":
+        search_results = filtered_df[filtered_df['Name'] == search_term]
+
+        for _, row in search_results.iterrows():
+            with st.expander(row['Name']):
+                st.write(f"**Territory:** {row['Territory']}")
+                st.write(f"**Sales Rep:** {row['Sales Rep']}")
+                st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
+                st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
+                st.write(f"**Address:** {row['Corrected_Address']}")
 
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
