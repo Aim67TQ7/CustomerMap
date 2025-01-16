@@ -517,24 +517,49 @@ try:
             tooltip='Your Location'
         ).add_to(m)
 
+    from route_planner import create_route_cards, calculate_optimal_route, clear_route_cards, get_active_route
+
+    # Display route planning cards
+    st.markdown("### Route Planning")
+    create_route_cards()
+    
+    # Add Plan Trip button
+    if st.button("Plan Trip"):
+        route = get_active_route()
+        if len(route) >= 2:
+            optimal_route = calculate_optimal_route(route)
+            
+            # Draw optimal route on map
+            coordinates = [(loc['lat'], loc['lon']) for loc in optimal_route]
+            folium.PolyLine(
+                coordinates,
+                weight=2,
+                color='red',
+                opacity=0.8
+            ).add_to(m)
+            
+            # Display route summary
+            total_distance = 0
+            st.markdown("### Route Summary")
+            for i in range(len(optimal_route)):
+                st.write(f"{i+1}. {optimal_route[i]['name']}")
+                if i < len(optimal_route) - 1:
+                    dist = haversine_distance(
+                        optimal_route[i]['lat'], optimal_route[i]['lon'],
+                        optimal_route[i+1]['lat'], optimal_route[i+1]['lon']
+                    )
+                    total_distance += dist
+            st.write(f"\nTotal distance: {total_distance:.1f} km")
+        else:
+            st.warning("Please select at least 2 locations for route planning")
+
+    # Clear route button
+    if st.button("Clear Route"):
+        clear_route_cards()
+        st.rerun()
+
     # Display the map
     folium_static(m, width=1200)
-
-    # Map container
-    selected_customers = st.session_state.get('selected_customers', [])
-
-    # Draw routes if customers are selected
-    if len(selected_customers) >= 2:
-        # Create route coordinates
-        coordinates = [(c['lat'], c['lon']) for c in selected_customers]
-
-        # Draw route line
-        folium.PolyLine(
-            coordinates,
-            weight=2,
-            color='red',
-            opacity=0.8
-        ).add_to(m)
 
     if st.session_state.selected_customer:
         selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
