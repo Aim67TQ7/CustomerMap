@@ -6,12 +6,16 @@ def clean_data(df):
     # Remove rows with invalid coordinates
     df = df[df['Latitude'].notna() & df['Longitude'].notna()]
     
+    # Remove rows with "Error" in coordinates
+    df = df[~(df['Latitude'].astype(str).str.contains('Error', na=False)) & 
+            ~(df['Longitude'].astype(str).str.contains('Error', na=False))]
+    
     # Convert coordinates to float
     df['Latitude'] = pd.to_numeric(df['Latitude'], errors='coerce')
     df['Longitude'] = pd.to_numeric(df['Longitude'], errors='coerce')
     
-    # Remove rows with "Error" in coordinates
-    df = df[~((df['Latitude'] == 'Error') | (df['Longitude'] == 'Error'))]
+    # Remove any rows where conversion to float failed
+    df = df.dropna(subset=['Latitude', 'Longitude'])
     
     # Clean phone numbers
     df['Phone'] = df['Phone'].astype(str).apply(clean_phone_number)
