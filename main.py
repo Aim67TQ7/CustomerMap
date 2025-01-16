@@ -327,21 +327,21 @@ try:
                 }
 
                 // Update all buttons with the same name
-                document.querySelectorAll(`button[data-name="${name}"]`).forEach(button => {
-                    updateButtonStyle(button, selectedCustomers.has(name));
+                document.querySelectorAll(`input[data-name="${name}"]`).forEach(checkbox => {
+                    checkbox.checked = selectedCustomers.has(name);
                 });
 
                 // Send updated selection to Streamlit
                 const selectedArray = Array.from(selectedCustomers.values());
-                window.parent.postMessage({
-                    type: 'streamlit:setComponentValue',
-                    value: JSON.stringify(selectedArray)
-                }, '*');
-                
-                // Update Streamlit session state
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue(selectedArray);
                 }
+                setTimeout(() => {
+                    window.parent.postMessage({
+                        type: 'streamlit:setComponentValue',
+                        value: JSON.stringify(selectedArray)
+                    }, '*');
+                }, 100);
             }
         </script>
     """, unsafe_allow_html=True)
