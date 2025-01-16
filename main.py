@@ -301,7 +301,7 @@ try:
                 // Handle both customer details and route planning
                 const customer = {name: name, lat: lat, lon: lon};
                 
-                // Send customer details
+                // Send customer details immediately
                 window.parent.streamlit.setComponentValue({
                     type: 'customer_details',
                     name: name,
@@ -309,7 +309,7 @@ try:
                     lon: lon
                 });
                 
-                // Add to route planning
+                // Add to route planning if not already selected
                 if (!selectedCustomers.has(name)) {
                     if (selectedCustomers.size >= 8) {
                         alert('Maximum 8 locations can be selected for routing');
@@ -319,10 +319,12 @@ try:
                     
                     // Update route selection
                     const selectedArray = Array.from(selectedCustomers.values());
-                    window.parent.streamlit.setComponentValue({
-                        type: 'route_selection',
-                        customers: selectedArray
-                    });
+                    setTimeout(() => {
+                        window.parent.streamlit.setComponentValue({
+                            type: 'route_selection',
+                            customers: selectedArray
+                        });
+                    }, 100);
                 }
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue({
