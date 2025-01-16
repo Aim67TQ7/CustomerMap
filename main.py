@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import folium
-from streamlit_folium import folium_static
+from streamlit_folium import folium_static, st_folium # Added st_folium import
 from utils import clean_data, format_currency
 
 # Page configuration
@@ -96,7 +96,7 @@ try:
 
     # Add data source selector
     data_source = st.radio("Select Data Source", ["BMC Customers", "MAI Customers"], horizontal=True)
-    
+
     # Select the appropriate dataset based on user choice
     filtered_df = mai_df if data_source == "MAI Customers" else df
 
@@ -192,7 +192,27 @@ try:
                 icon=folium.Icon(color='red', icon='info-sign')
             ).add_to(m)
 
-    folium_static(m, width=1200)
+    # Add customer markers
+    for _, row in filtered_df.iterrows():
+        popup_content = f"""
+        <div style='min-width: 200px'>
+            <h4>{row['Name']}</h4>
+            <b>Territory:</b> {row['Territory']}<br>
+            <b>Sales Rep:</b> {row['Sales Rep']}<br>
+            <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
+            <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
+            <b>Address:</b> {row['Corrected_Address']}<br>
+        </div>
+        """
+        folium.Marker(
+            location=[row['Latitude'], row['Longitude']],
+            popup=folium.Popup(popup_content, max_width=300),
+            tooltip=row['Name'],
+            icon=folium.Icon(color='blue', icon='info-sign')
+        ).add_to(m)
+
+    # Display map using st_folium
+    st_folium(m, width=1200)
 
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
