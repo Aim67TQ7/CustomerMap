@@ -205,8 +205,12 @@ try:
                 # Create popup content with selection button
                 popup_content = f"""
                 <div style='min-width: 200px'>
-                    <h4 style="cursor: pointer;" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
-                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>Add to Route</button><br><br>
+                    <h4>{row['Name']}</h4>
+                    <label class="route-toggle">
+                        <input type="checkbox" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Add to Route</span>
+                    </label><br><br>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
@@ -451,17 +455,30 @@ try:
             background-color: #e3f2fd;
             font-weight: bold;
         }
-        .toggle-switch {
+        .route-toggle {
             position: relative;
             display: inline-flex;
             align-items: center;
-            margin-top: 10px;
+            margin: 10px 0;
             cursor: pointer;
+            background: #f0f2f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
-        .toggle-switch input {
+        .route-toggle input {
             opacity: 0;
             width: 0;
             height: 0;
+        }
+        .route-toggle input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        .route-toggle input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .route-toggle:hover {
+            background: #e3e6f0;
         }
         .toggle-slider {
             position: relative;

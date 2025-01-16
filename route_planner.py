@@ -60,16 +60,17 @@ def create_route_cards():
             card = st.session_state.route_cards[i]
             if card:
                 st.markdown(f"""
-                    <div style='padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 5px;'>
-                        <h4>{card['name']}</h4>
-                        <p>Lat: {card['lat']:.4f}<br>Lon: {card['lon']:.4f}</p>
-                        <button onclick='removeFromRoute({i})'>Remove</button>
+                    <div style='padding: 15px; border: 2px solid #4CAF50; border-radius: 8px; margin: 5px; background-color: #f8fff8;'>
+                        <h4 style='color: #2E7D32; margin-top: 0;'>{card['name']}</h4>
+                        <p style='margin: 8px 0;'>Lat: {card['lat']:.4f}<br>Lon: {card['lon']:.4f}</p>
+                        <button style='background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;' 
+                                onclick='removeFromRoute({i})'>Remove</button>
                     </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
-                    <div style='padding: 10px; border: 1px dashed #ddd; border-radius: 5px; margin: 5px; min-height: 100px;'>
-                        <p style='color: #888; text-align: center;'>Empty Slot</p>
+                    <div style='padding: 15px; border: 2px dashed #ddd; border-radius: 8px; margin: 5px; min-height: 100px; background-color: #fafafa;'>
+                        <p style='color: #888; text-align: center; margin: 20px 0;'>Empty Slot</p>
                     </div>
                 """, unsafe_allow_html=True)
 
