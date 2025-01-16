@@ -1,4 +1,6 @@
 
+import pandas as pd
+
 def create_customer_popup(row, format_currency):
     """Create popup content with double-click functionality"""
     popup_content = f"""
