@@ -101,18 +101,7 @@ try:
     with st.sidebar:
         st.header("Filters")
         
-        # Add nearby prospects search
-        st.subheader("Search Nearby Prospects")
-        show_nearby_prospects = st.toggle("Enable Nearby Prospects Search")
-        if show_nearby_prospects:
-            search_address = st.text_input("Enter address to search around:")
-            search_radius = st.slider("Search radius (miles):", 10, 50, 25)
-            
-            if search_address:
-                from places_api import geocode_address
-                location = geocode_address(search_address)
-                if location:
-                    # Calculate distances and filter prospects
+        # Remove nearby prospects search from sidebar
                     from math import radians, sin, cos, sqrt, atan2
                     
                     def calculate_distance(lat1, lon1, lat2, lon2):
@@ -270,12 +259,25 @@ try:
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <label class="toggle-switch">
-                        <input type="checkbox" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
-                               data-name="{row['Name']}">
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Add to Route</span>
-                    </label>
+                    <div class="action-buttons">
+                        <label class="toggle-switch">
+                            <input type="checkbox" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
+                                   data-name="{row['Name']}">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Add to Route</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" onclick='toggleNearbyProspects("{row['Latitude']}", "{row['Longitude']}")' 
+                                   id="prospects-toggle-{row['Name']}">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Show Nearby Prospects</span>
+                        </label>
+                        <div id="radius-slider-{row['Name']}" style="display:none; margin-top:10px;">
+                            <input type="range" min="10" max="30" value="20" 
+                                   onchange='updateProspects("{row['Latitude']}", "{row['Longitude']}", this.value, "{row['Name']}")'>
+                            <span id="radius-value-{row['Name']}">20 miles</span>
+                        </div>
+                    </div>
                 </div>
                 """
 
@@ -352,6 +354,41 @@ try:
     st.markdown("""
         <script>
             var selectedCustomers = new Map();
+            var prospectMarkers = [];
+            
+            function toggleNearbyProspects(lat, lng) {
+                const sliderId = event.target.id.replace('prospects-toggle-', 'radius-slider-');
+                const slider = document.getElementById(sliderId);
+                
+                if (event.target.checked) {
+                    slider.style.display = 'block';
+                    updateProspects(lat, lng, slider.querySelector('input').value, sliderId.split('-').pop());
+                } else {
+                    slider.style.display = 'none';
+                    clearProspects();
+                }
+            }
+            
+            function clearProspects() {
+                prospectMarkers.forEach(marker => marker.remove());
+                prospectMarkers = [];
+            }
+            
+            function updateProspects(lat, lng, radius, name) {
+                clearProspects();
+                document.getElementById(`radius-value-${name}`).textContent = `${radius} miles`;
+                
+                // Send message to Streamlit to fetch and display prospects
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: JSON.stringify({
+                        type: 'show_prospects',
+                        lat: parseFloat(lat),
+                        lng: parseFloat(lng),
+                        radius: parseInt(radius)
+                    })
+                }, '*');
+            }
 
             // Initialize selected customers from session state
             window.addEventListener('message', function(e) {
