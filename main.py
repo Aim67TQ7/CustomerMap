@@ -324,8 +324,12 @@ try:
                     selectedCustomers.set(name, customer);
                 }
 
-                // Send updated selection to Streamlit
+                // Force immediate update of selection
                 const selectedArray = Array.from(selectedCustomers.values());
+                window.parent.streamlit.setComponentValue({
+                    type: 'route_selection',
+                    customers: selectedArray
+                });
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue({
                         type: 'route_selection',
@@ -590,7 +594,7 @@ try:
         st.session_state.show_supplier_cards = False
     
     # Create buttons directly with Streamlit
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         if st.button('Clear Route', type='primary', use_container_width=True):
@@ -599,14 +603,6 @@ try:
             st.rerun()
 
     with col2:
-        if st.button('Evaluate Route', type='primary', use_container_width=True):
-            if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 1:
-                st.warning('Please select at least one supplier to evaluate.')
-            else:
-                st.session_state.show_supplier_cards = True
-                st.rerun()
-
-    with col3:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
             if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
                 st.warning('Please select at least 2 customers to calculate a route.')
