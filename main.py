@@ -332,10 +332,16 @@ try:
                 });
 
                 // Send updated selection to Streamlit
+                const selectedArray = Array.from(selectedCustomers.values());
                 window.parent.postMessage({
                     type: 'streamlit:setComponentValue',
-                    value: JSON.stringify(Array.from(selectedCustomers.values()))
+                    value: JSON.stringify(selectedArray)
                 }, '*');
+                
+                // Update Streamlit session state
+                if (typeof window.parent.streamlit !== 'undefined') {
+                    window.parent.streamlit.setComponentValue(selectedArray);
+                }
             }
         </script>
     """, unsafe_allow_html=True)
@@ -473,6 +479,17 @@ try:
         st.session_state.selected_customers = []
     if 'user_location' not in st.session_state:
         st.session_state.user_location = None
+        
+    # Handle component value updates
+    if st.session_state.get('_component_value'):
+        try:
+            selected = st.session_state._component_value
+            if isinstance(selected, str):
+                selected = eval(selected)
+            if isinstance(selected, list):
+                st.session_state.selected_customers = selected
+        except:
+            pass
 
     # Add user location marker if available
     if st.session_state.user_location:
