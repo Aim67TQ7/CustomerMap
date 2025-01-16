@@ -563,15 +563,28 @@ try:
     # Display the map
     folium_static(m, width=1200)
 
+    # Initialize supplier cards state if not exists
+    if 'show_supplier_cards' not in st.session_state:
+        st.session_state.show_supplier_cards = False
+    
     # Create buttons directly with Streamlit
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button('Clear Route', type='primary', use_container_width=True):
             st.session_state.selected_customers = []
+            st.session_state.show_supplier_cards = False
             st.rerun()
 
     with col2:
+        if st.button('Evaluate Route', type='primary', use_container_width=True):
+            if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 1:
+                st.warning('Please select at least one supplier to evaluate.')
+            else:
+                st.session_state.show_supplier_cards = True
+                st.rerun()
+
+    with col3:
         if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
             if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
                 st.warning('Please select at least 2 customers to calculate a route.')
@@ -699,6 +712,35 @@ try:
     if st.session_state.widget_clicked:
         st.session_state.selected_customer = st.session_state.widget_clicked
         st.rerun()
+
+    # Display supplier cards if enabled
+    if st.session_state.show_supplier_cards and st.session_state.selected_customers:
+        st.markdown("### Selected Suppliers")
+        cols = st.columns(3)
+        for idx, customer in enumerate(st.session_state.selected_customers):
+            with cols[idx % 3]:
+                with st.container():
+                    st.markdown(f"""
+                    <div style='padding: 1rem; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1rem;'>
+                        <h4>{customer['name']}</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    customer_data = filtered_df[filtered_df['Name'] == customer['name']]
+                    if not customer_data.empty:
+                        row = customer_data.iloc[0]
+                        st.write(f"**Territory:** {row['Territory']}")
+                        st.write(f"**Sales Rep:** {row['Sales Rep']}")
+                        st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
+                        st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
+                        st.write(f"**Address:** {row['Corrected_Address']}")
+                        
+                        # Add remove button for each card
+                        if st.button(f"Remove {customer['name']}", key=f"remove_{idx}"):
+                            st.session_state.selected_customers.remove(customer)
+                            if not st.session_state.selected_customers:
+                                st.session_state.show_supplier_cards = False
+                            st.rerun()
 
     if search_term and search_term != "All":
         search_results = filtered_df[filtered_df['Name'] == search_term]
