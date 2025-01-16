@@ -1,0 +1,67 @@
+import googlemaps
+import csv
+import time
+from datetime import datetime
+
+# Initialize the Google Maps client with your API key
+gmaps = googlemaps.Client(key='AIzaSyB83DSGY9XErn55LIbGJibnv7uAfwwIVm4')
+
+
+# Function to geocode an address
+def geocode_address(address):
+    geocode_result = gmaps.geocode(address)
+    if geocode_result:
+        return geocode_result[0]['geometry']['location']
+    else:
+        return None
+
+# Function to fetch places and write to CSV
+def fetch_places_and_write_to_csv(location, radius, place_type, base_filename):
+    # Convert miles to meters for the API radius
+    radius_in_meters = radius * 1609.34  # 1 mile is approximately 1609.34 meters
+
+    # Generate a timestamp for the filename
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"{base_filename}_{timestamp}.csv"
+
+    # Open a file for writing and write headers
+    with open(filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Name', 'Address', 'Place ID', 'Rating'])
+
+        # Nested function to write place data to the CSV
+        def write_places(results):
+            for place in results['results']:
+                writer.writerow([
+                    place['name'],
+                    place.get('vicinity', 'No Address'),
+                    place['place_id'],
+                    place.get('rating', 'No Rating')
+                ])
+
+        # Fetch places and handle pagination
+        results = gmaps.places_nearby(location=location, radius=radius_in_meters, type=place_type)
+        write_places(results)
+
+        while 'next_page_token' in results:
+            time.sleep(2)  # Google requires a pause before using the next page token
+            results = gmaps.places_nearby(page_token=results['next_page_token'])
+            write_places(results)
+
+# Main function to handle user input
+def main():
+    address = input("Enter the address: ")
+    radius = float(input("Enter the radius in miles (e.g., 10 or 50): "))
+    location = geocode_address(address)
+    
+    if location:
+        print(f"Geocoded location: {location}")
+        fetch_places_and_write_to_csv(location, radius, 'manufacturer', 'manufacturers_data')
+        print("Data has been fetched and written to CSV.")
+    else:
+        print("Geocoding failed. Check the address and try again.")
+
+# Run the main function if this script is executed as the main program
+if __name__ == "__main__":
+    main()
+
