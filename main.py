@@ -730,34 +730,36 @@ try:
         st.session_state.selected_customer = st.session_state.widget_clicked
         st.rerun()
 
-    # Display supplier cards if enabled
-    if st.session_state.show_supplier_cards and st.session_state.selected_customers:
-        st.markdown("### Selected Suppliers")
-        cols = st.columns(3)
-        for idx, customer in enumerate(st.session_state.selected_customers):
-            with cols[idx % 3]:
-                with st.container():
-                    st.markdown(f"""
-                    <div style='padding: 1rem; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1rem;'>
-                        <h4>{customer['name']}</h4>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    customer_data = filtered_df[filtered_df['Name'] == customer['name']]
-                    if not customer_data.empty:
-                        row = customer_data.iloc[0]
+    # Display selected customer details in a placeholder card
+    st.markdown("### Customer Details")
+    details_placeholder = st.empty()
+    
+    if st.session_state.selected_customers:
+        selected_names = [c['name'] for c in st.session_state.selected_customers]
+        selected_customer = st.selectbox("Select customer to view details:", selected_names)
+        
+        if selected_customer:
+            customer_data = filtered_df[filtered_df['Name'] == selected_customer]
+            if not customer_data.empty:
+                row = customer_data.iloc[0]
+                with details_placeholder.container():
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.markdown(f"### {row['Name']}")
                         st.write(f"**Territory:** {row['Territory']}")
                         st.write(f"**Sales Rep:** {row['Sales Rep']}")
                         st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
                         st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
                         st.write(f"**Address:** {row['Corrected_Address']}")
-                        
-                        # Add remove button for each card
-                        if st.button(f"Remove {customer['name']}", key=f"remove_{idx}"):
-                            st.session_state.selected_customers.remove(customer)
-                            if not st.session_state.selected_customers:
-                                st.session_state.show_supplier_cards = False
+                    with col2:
+                        if st.button("Remove from Route", key=f"remove_{selected_customer}"):
+                            st.session_state.selected_customers = [
+                                c for c in st.session_state.selected_customers 
+                                if c['name'] != selected_customer
+                            ]
                             st.rerun()
+    else:
+        details_placeholder.info("Select customers on the map to view their details here.")
 
     if search_term and search_term != "All":
         search_results = filtered_df[filtered_df['Name'] == search_term]
