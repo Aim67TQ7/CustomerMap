@@ -311,25 +311,30 @@ try:
             }
 
             function selectCustomer(name, lat, lon) {
-                // Add customer to selected customers for route planning
-                const customer = {name: name, lat: lat, lon: lon};
+                // Send customer details to Streamlit
+                window.parent.streamlit.setComponentValue({
+                    type: 'customer_details',
+                    name: name,
+                    lat: lat,
+                    lon: lon
+                });
                 
-                if (selectedCustomers.has(name)) {
-                    selectedCustomers.delete(name);
-                } else {
+                // Also add to route planning
+                const customer = {name: name, lat: lat, lon: lon};
+                if (!selectedCustomers.has(name)) {
                     if (selectedCustomers.size >= 8) {
                         alert('Maximum 8 locations can be selected for routing');
                         return;
                     }
                     selectedCustomers.set(name, customer);
+                    
+                    // Update route selection
+                    const selectedArray = Array.from(selectedCustomers.values());
+                    window.parent.streamlit.setComponentValue({
+                        type: 'route_selection',
+                        customers: selectedArray
+                    });
                 }
-
-                // Force immediate update of selection
-                const selectedArray = Array.from(selectedCustomers.values());
-                window.parent.streamlit.setComponentValue({
-                    type: 'route_selection',
-                    customers: selectedArray
-                });
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue({
                         type: 'route_selection',
@@ -490,12 +495,12 @@ try:
             if isinstance(selected, str):
                 selected = eval(selected)
             if isinstance(selected, dict):
-                if selected.get('type') == 'route_selection':
+                if selected.get('type') == 'customer_details':
+                    st.session_state.selected_customer = selected.get('name')
+                    st.rerun()
+                elif selected.get('type') == 'route_selection':
                     customers = selected.get('customers', [])
                     st.session_state.selected_customers = customers
-                    if customers:
-                        # Select the first customer in the route for details display
-                        st.session_state.selected_customer = customers[0]['name']
                     st.rerun()
         except Exception as e:
             st.error(f"Error handling selection: {str(e)}")
