@@ -205,7 +205,8 @@ try:
                 # Create popup content with selection button
                 popup_content = f"""
                 <div style='min-width: 200px'>
-                    <h4 style="cursor: pointer;" ondblclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
+                    <h4 style="cursor: pointer;" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
+                    <button onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>Add to Route</button><br><br>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
@@ -287,6 +288,17 @@ try:
     st.markdown("""
         <script>
             var selectedCustomers = new Map();
+
+            function updateRouteCards() {
+                const selectedArray = Array.from(selectedCustomers.values());
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: JSON.stringify({
+                        type: 'route_selection',
+                        customers: selectedArray
+                    })
+                }, '*');
+            }
 
             // Initialize selected customers from session state
             window.addEventListener('message', function(e) {
