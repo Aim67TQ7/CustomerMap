@@ -3,4 +3,3 @@ folium==0.19.0
 pandas==2.2.3
 streamlit==1.41.1
 streamlit-folium==0.24.0
-googlemaps
