@@ -311,30 +311,24 @@ try:
             }
 
             function selectCustomer(name, lat, lon) {
-                if (selectedCustomers.has(name)) {
-                    selectedCustomers.delete(name);
-                } else {
-                    if (selectedCustomers.size >= 8) {
-                        alert('Maximum 8 locations can be selected for routing');
-                        return;
-                    }
-                    selectedCustomers.set(name, {name: name, lat: lat, lon: lon});
-                }
-
-                // Update all buttons with the same name
-                document.querySelectorAll(`input[data-name="${name}"]`).forEach(checkbox => {
-                    checkbox.checked = selectedCustomers.has(name);
-                });
-
-                // Send updated selection to Streamlit
-                const selectedArray = Array.from(selectedCustomers.values());
+                // Send the selected customer to Streamlit for details display
                 if (typeof window.parent.streamlit !== 'undefined') {
-                    window.parent.streamlit.setComponentValue(selectedArray);
+                    window.parent.streamlit.setComponentValue({
+                        type: 'select_customer',
+                        name: name,
+                        lat: lat,
+                        lon: lon
+                    });
                 }
                 setTimeout(() => {
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
-                        value: JSON.stringify(selectedArray)
+                        value: JSON.stringify({
+                            type: 'select_customer',
+                            name: name,
+                            lat: lat,
+                            lon: lon
+                        })
                     }, '*');
                 }, 100);
             }
@@ -481,10 +475,14 @@ try:
             selected = st.session_state._component_value
             if isinstance(selected, str):
                 selected = eval(selected)
-            if isinstance(selected, list):
-                st.session_state.selected_customers = selected
-        except:
-            pass
+            if isinstance(selected, dict) and selected.get('type') == 'select_customer':
+                customer_name = selected.get('name')
+                customer_data = filtered_df[filtered_df['Name'] == customer_name]
+                if not customer_data.empty:
+                    st.session_state.selected_customer = customer_name
+                    st.rerun()
+        except Exception as e:
+            st.error(f"Error handling selection: {str(e)}")
 
     # Add user location marker if available
     if st.session_state.user_location:
