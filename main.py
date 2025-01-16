@@ -193,7 +193,7 @@ try:
                 # Create popup content with selection button
                 popup_content = f"""
                 <div style='min-width: 200px'>
-                    <h4>{row['Name']}</h4>
+                    <h4 style="cursor: pointer;" ondblclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
@@ -202,12 +202,7 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <label class="toggle-switch">
-                        <input type="checkbox" onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})' 
-                               data-name="{row['Name']}">
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Add to Route</span>
-                    </label>
+                    <small style="color: #666;">(Double-click company name to add to route)</small>
                 </div>
                 """
 
