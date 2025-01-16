@@ -96,6 +96,9 @@ try:
 
     # Add data source selector
     data_source = st.radio("Select Data Source", ["BMC Customers", "MAI Customers"], horizontal=True)
+    
+    # Select the appropriate dataset based on user choice
+    filtered_df = mai_df if data_source == "MAI Customers" else df
 
     # Sidebar filters
     with st.sidebar:
