@@ -202,7 +202,7 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <small style="color: #666;">(Double-click company name to add to route)</small>
+                    <small style="color: #666;">(Double-click company name to plan route)</small>
                 </div>
                 """
 
@@ -311,23 +311,33 @@ try:
             }
 
             function selectCustomer(name, lat, lon) {
-                // Send the selected customer to Streamlit for details display
+                // Add customer to selected customers for route planning
+                const customer = {name: name, lat: lat, lon: lon};
+                
+                if (selectedCustomers.has(name)) {
+                    selectedCustomers.delete(name);
+                } else {
+                    if (selectedCustomers.size >= 8) {
+                        alert('Maximum 8 locations can be selected for routing');
+                        return;
+                    }
+                    selectedCustomers.set(name, customer);
+                }
+
+                // Send updated selection to Streamlit
+                const selectedArray = Array.from(selectedCustomers.values());
                 if (typeof window.parent.streamlit !== 'undefined') {
                     window.parent.streamlit.setComponentValue({
-                        type: 'select_customer',
-                        name: name,
-                        lat: lat,
-                        lon: lon
+                        type: 'route_selection',
+                        customers: selectedArray
                     });
                 }
                 setTimeout(() => {
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
                         value: JSON.stringify({
-                            type: 'select_customer',
-                            name: name,
-                            lat: lat,
-                            lon: lon
+                            type: 'route_selection',
+                            customers: selectedArray
                         })
                     }, '*');
                 }, 100);
@@ -475,11 +485,13 @@ try:
             selected = st.session_state._component_value
             if isinstance(selected, str):
                 selected = eval(selected)
-            if isinstance(selected, dict) and selected.get('type') == 'select_customer':
-                customer_name = selected.get('name')
-                customer_data = filtered_df[filtered_df['Name'] == customer_name]
-                if not customer_data.empty:
-                    st.session_state.selected_customer = customer_name
+            if isinstance(selected, dict):
+                if selected.get('type') == 'route_selection':
+                    customers = selected.get('customers', [])
+                    st.session_state.selected_customers = customers
+                    if customers:
+                        # Select the first customer in the route for details display
+                        st.session_state.selected_customer = customers[0]['name']
                     st.rerun()
         except Exception as e:
             st.error(f"Error handling selection: {str(e)}")
