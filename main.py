@@ -192,7 +192,7 @@ try:
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
                 # Create popup content with selection button
                 popup_content = f"""
-                <div style='min-width: 200px'>
+                <div style='min-width: 200px; cursor: pointer;' onclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>
                     <h4 style="cursor: pointer;" ondblclick='selectCustomer("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
@@ -202,7 +202,7 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <small style="color: #666;">(Double-click company name to plan route)</small>
+                    <small style="color: #666;">(Double-click company name to add to route)</small>
                 </div>
                 """
 
