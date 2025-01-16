@@ -100,6 +100,40 @@ try:
     # Sidebar filters
     with st.sidebar:
         st.header("Filters")
+        
+        # Add Places API search
+        st.subheader("Find Nearby Manufacturers")
+        search_address = st.text_input("Enter address to search around:")
+        search_radius = st.number_input("Search radius (miles):", 1, 50, 10)
+        
+        if st.button("Search Nearby"):
+            if search_address:
+                from places_api import geocode_address, fetch_nearby_manufacturers
+                location = geocode_address(search_address)
+                if location:
+                    manufacturers = fetch_nearby_manufacturers(location, search_radius)
+                    if manufacturers:
+                        # Add markers for found manufacturers
+                        for mfg in manufacturers:
+                            popup_content = f"""
+                            <div style='min-width: 200px'>
+                                <h4>{mfg['Name']}</h4>
+                                <b>Address:</b> {mfg['Address']}<br>
+                                <b>Rating:</b> {mfg['Rating']}<br>
+                                <b>Phone:</b> {mfg['Phone']}<br>
+                                <b>Website:</b> <a href='{mfg['Website']}' target='_blank'>{mfg['Website']}</a><br>
+                            </div>
+                            """
+                            folium.Marker(
+                                location=[mfg['Latitude'], mfg['Longitude']],
+                                popup=folium.Popup(popup_content, max_width=300),
+                                tooltip=mfg['Name'],
+                                icon=folium.Icon(color='purple', icon='industry', prefix='fa')
+                            ).add_to(m)
+                    else:
+                        st.warning("No manufacturers found in the specified radius.")
+                else:
+                    st.error("Could not geocode the provided address.")
 
         # Get initial unique values
         states = sorted(df['State/Prov'].unique().tolist())
