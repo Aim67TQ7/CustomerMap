@@ -103,8 +103,8 @@ try:
         
         # Remove nearby prospects search from sidebar
                     from math import radians, sin, cos, sqrt, atan2
-                    
-                    def calculate_distance(lat1, lon1, lat2, lon2):
+        
+        def calculate_distance(lat1, lon1, lat2, lon2):
                         R = 3959  # Earth's radius in miles
                         lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
                         dlat = lat2 - lat1
