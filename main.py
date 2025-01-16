@@ -72,9 +72,21 @@ if not st.session_state.authenticated:
 
 # Load and clean data
 @st.cache_data
-def load_data():
-    df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
+def load_data(data_source):
+    if data_source == "Customer Locations":
+        df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
+    elif data_source == "Global Customer Locations":
+        df = pd.read_csv("attached_assets/CustomerGlobalGeoLocs.csv")
+    else:  # MAI Customer Locations
+        df = pd.read_csv("attached_assets/MAI_CustomerGeoLocs.csv")
     return clean_data(df)
+
+# Select data source
+data_source = st.radio(
+    "Select Data Source",
+    ["Customer Locations", "Global Customer Locations", "MAI Customer Locations"],
+    horizontal=True
+)
 
 # Load and prepare prospects data
 @st.cache_data
@@ -85,7 +97,7 @@ def load_prospects():
     return df_prospects
 
 try:
-    df = load_data()
+    df = load_data(data_source)
     prospects_df = load_prospects()
 
     # Sidebar filters
