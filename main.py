@@ -589,17 +589,27 @@ try:
     if 'show_supplier_cards' not in st.session_state:
         st.session_state.show_supplier_cards = False
     
-    # Create buttons directly with Streamlit
-    col1, col2 = st.columns(2)
+    # Show selected customers table
+    if st.session_state.selected_customers:
+        st.markdown("### Selected Customers")
+        customer_table = []
+        for customer in st.session_state.selected_customers:
+            customer_data = filtered_df[filtered_df['Name'] == customer['name']].iloc[0]
+            customer_table.append({
+                "Customer": customer['name'],
+                "Address": customer_data['Corrected_Address']
+            })
+        st.table(customer_table)
 
+    # Route buttons
+    col1, col2 = st.columns(2)
     with col1:
-        if st.button('Clear Route', type='primary', use_container_width=True):
+        if st.button('Clear Selections', type='primary', use_container_width=True):
             st.session_state.selected_customers = []
-            st.session_state.show_supplier_cards = False
             st.rerun()
 
     with col2:
-        if st.button('Calculate Optimal Route', type='primary', use_container_width=True):
+        if st.button('Calculate Optimal Route', type='primary', use_container_width=True) and len(st.session_state.selected_customers) >= 2:
             if not hasattr(st.session_state, 'selected_customers') or len(st.session_state.selected_customers) < 2:
                 st.warning('Please select at least 2 customers to calculate a route.')
             else:
