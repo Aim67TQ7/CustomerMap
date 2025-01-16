@@ -190,21 +190,8 @@ try:
         # Add markers for each customer
         for idx, row in filtered_df.iterrows():
             if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
-                # Create popup content with selection button
-                popup_content = f"""
-                <div style='min-width: 200px'>
-                    <h4 style="cursor: pointer;" onclick='selectCustomerDetails("{row['Name']}", {row['Latitude']}, {row['Longitude']})'>{row['Name']}</h4>
-                    <b>Territory:</b> {row['Territory']}<br>
-                    <b>Sales Rep:</b> {row['Sales Rep']}<br>
-                    <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                    <b>2024:</b> {format_currency(row['$2,024 '])}<br>
-                    <b>2023:</b> {format_currency(row['$2,023 '])}<br>
-                    <b>2022:</b> {format_currency(row['$2,022 '])}<br>
-                    <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
-                    <b>Address:</b> {row['Corrected_Address']}<br>
-                    <small style="color: #666;">(Double-click company name to add to route)</small>
-                </div>
-                """
+                from map_handlers import create_customer_popup
+                popup_content = create_customer_popup(row, format_currency)
 
                 # Calculate marker size based on 3-year spend thresholds
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
@@ -310,20 +297,19 @@ try:
                 }
             }
 
-            function selectCustomerDetails(name, lat, lon) {
-                // Send only customer details to Streamlit
+            function selectCustomer(name, lat, lon) {
+                // Handle both customer details and route planning
+                const customer = {name: name, lat: lat, lon: lon};
+                
+                // Send customer details
                 window.parent.streamlit.setComponentValue({
                     type: 'customer_details',
                     name: name,
                     lat: lat,
                     lon: lon
                 });
-            }
-
-            function selectCustomer(name, lat, lon) {
                 
-                // Also add to route planning
-                const customer = {name: name, lat: lat, lon: lon};
+                // Add to route planning
                 if (!selectedCustomers.has(name)) {
                     if (selectedCustomers.size >= 8) {
                         alert('Maximum 8 locations can be selected for routing');
