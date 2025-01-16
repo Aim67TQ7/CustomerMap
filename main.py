@@ -580,17 +580,75 @@ try:
                     route, distances = calculate_optimal_route(st.session_state.selected_customers)
                     st.session_state.selected_customers = route
 
-                    # Display route details
-                    st.subheader("Route Details")
+                    # Display route summary
+                    st.subheader("Route Summary")
                     total_distance = sum(d['distance'] for d in distances)
                     total_time = sum(d['time'] for d in distances)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Total Distance", f"{round(total_distance, 2)} km")
+                    with col2:
+                        st.metric("Est. Total Time", f"{round(total_time, 1)} min")
 
-                    st.write(f"Total Distance: {round(total_distance, 2)} km")
-                    st.write(f"Estimated Total Time: {round(total_time, 1)} minutes")
+                    # Display route cards
+                    st.subheader("Route Details")
+                    
+                    for i, (leg, customer) in enumerate(zip(distances, route[:-1])):
+                        with st.container():
+                            st.markdown("""
+                            <style>
+                            .route-card {
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                padding: 15px;
+                                margin: 10px 0;
+                                background-color: #f8f9fa;
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)
+                            
+                            with st.expander(f"Stop {i+1}: {customer['name']}", expanded=True):
+                                col1, col2 = st.columns([1, 1])
+                                
+                                with col1:
+                                    st.markdown("#### Route Information")
+                                    st.write(f"📍 To next stop: **{leg['distance']} km**")
+                                    st.write(f"🚗 Est. drive time: **{leg['time']} min**")
+                                    # Simulated traffic pattern
+                                    traffic_status = "🟢 Light" if leg['time'] < 30 else "🟡 Moderate" if leg['time'] < 60 else "🔴 Heavy"
+                                    st.write(f"🚦 Traffic: **{traffic_status}**")
+                                    
+                                with col2:
+                                    st.markdown("#### Customer Information")
+                                    customer_data = filtered_df[filtered_df['Name'] == customer['name']]
+                                    if not customer_data.empty:
+                                        st.write(f"💼 Territory: **{customer_data['Territory'].iloc[0]}**")
+                                        st.write(f"👤 Sales Rep: **{customer_data['Sales Rep'].iloc[0]}**")
+                                        spend = float(str(customer_data['3-year Spend'].iloc[0]).replace('$', '').replace(',', ''))
+                                        priority = "⭐⭐⭐" if spend > 500000 else "⭐⭐" if spend > 100000 else "⭐"
+                                        st.write(f"⭐ Priority: **{priority}**")
+                                        st.write(f"💰 3-year Spend: **{format_currency(customer_data['3-year Spend'].iloc[0])}**")
+                                
+                            st.markdown("---")
 
-                    for leg in distances:
-                        st.write(f"🚗 {leg['from']} → {leg['to']}")
-                        st.write(f"   Distance: {leg['distance']} km | Est. Time: {leg['time']} min")
+                    # Final destination
+                    with st.expander(f"Final Stop: {route[-1]['name']}", expanded=True):
+                        customer_data = filtered_df[filtered_df['Name'] == route[-1]['name']]
+                        if not customer_data.empty:
+                            col1, col2 = st.columns([1, 1])
+                            with col1:
+                                st.markdown("#### Final Destination")
+                                st.write("🏁 Final Stop")
+                                
+                            with col2:
+                                st.markdown("#### Customer Information")
+                                st.write(f"💼 Territory: **{customer_data['Territory'].iloc[0]}**")
+                                st.write(f"👤 Sales Rep: **{customer_data['Sales Rep'].iloc[0]}**")
+                                spend = float(str(customer_data['3-year Spend'].iloc[0]).replace('$', '').replace(',', ''))
+                                priority = "⭐⭐⭐" if spend > 500000 else "⭐⭐" if spend > 100000 else "⭐"
+                                st.write(f"⭐ Priority: **{priority}**")
+                                st.write(f"💰 3-year Spend: **{format_currency(customer_data['3-year Spend'].iloc[0])}**")
 
                     st.rerun()
                 except Exception as e:
