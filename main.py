@@ -345,7 +345,7 @@ try:
         st.session_state.location_tracking = False
 
     # Add location toggle
-    location_tracking = st.checkbox('Track My Location', value=st.session_state.location_tracking)
+    location_tracking = st.checkbox('Show My Location', value=st.session_state.location_tracking)
 
     if location_tracking != st.session_state.location_tracking:
         st.session_state.location_tracking = location_tracking
