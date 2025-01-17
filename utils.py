@@ -13,7 +13,10 @@ def clean_data(df):
         'territory': 'Territory',
         'sales_rep': 'Sales Rep',
         'prodcode': 'ProdCode',
-        'state': 'State/Prov'
+        'state': 'State/Prov',
+        'state/prov': 'State/Prov',
+        'stateprov': 'State/Prov',
+        'state/province': 'State/Prov'
     }
     
     # Rename columns if they exist (case-insensitive)
