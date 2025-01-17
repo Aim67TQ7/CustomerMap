@@ -48,31 +48,26 @@ def calculate_optimal_route(locations: List[Dict]) -> List[Dict]:
     return best_route
 
 def create_route_cards():
-    """Create placeholder cards for route planning."""
+    """Create route cards for selected locations."""
     if 'route_cards' not in st.session_state:
-        st.session_state.route_cards = [None] * 8
+        st.session_state.route_cards = []
+
+    active_cards = [card for card in st.session_state.route_cards if card]
+    if not active_cards:
+        st.info("Select locations on the map to add them to your route.")
+        return
 
     cols = st.columns(4)
-    
-    # Create two rows of 4 cards each
-    for i in range(8):
+    for i, card in enumerate(active_cards):
         with cols[i % 4]:
-            card = st.session_state.route_cards[i]
-            if card:
-                st.markdown(f"""
-                    <div style='padding: 15px; border: 2px solid #4CAF50; border-radius: 8px; margin: 5px; background-color: #f8fff8;'>
-                        <h4 style='color: #2E7D32; margin-top: 0;'>{card['name']}</h4>
-                        <p style='margin: 8px 0;'>Lat: {card['lat']:.4f}<br>Lon: {card['lon']:.4f}</p>
-                        <button style='background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;' 
-                                onclick='removeFromRoute({i})'>Remove</button>
-                    </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                    <div style='padding: 15px; border: 2px dashed #ddd; border-radius: 8px; margin: 5px; min-height: 100px; background-color: #fafafa;'>
-                        <p style='color: #888; text-align: center; margin: 20px 0;'>Empty Slot</p>
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown(f"""
+                <div style='padding: 15px; border: 2px solid #4CAF50; border-radius: 8px; margin: 5px; background-color: #f8fff8;'>
+                    <h4 style='color: #2E7D32; margin-top: 0;'>{card['name']}</h4>
+                    <p style='margin: 8px 0;'>Lat: {card['lat']:.4f}<br>Lon: {card['lon']:.4f}</p>
+                    <button style='background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;' 
+                            onclick='removeFromRoute({i})'>Remove</button>
+                </div>
+            """, unsafe_allow_html=True)
 
 def update_route_card(customer_data: Dict) -> bool:
     """Add customer data to the next available route card."""
