@@ -76,21 +76,9 @@ if not st.session_state.authenticated:
 
 # Load and clean data
 @st.cache_data
-def load_data(data_source):
-    if data_source == "BMC":
-        df = pd.read_csv("attached_assets/BMC.csv")
-    elif data_source == "BME":
-        df = pd.read_csv("attached_assets/BME.csv")
-    else:  # MAI
-        df = pd.read_csv("attached_assets/MAI.csv")
+def load_data():
+    df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
     return clean_data(df)
-
-# Select data source
-data_source = st.radio(
-    "Select Data Source",
-    ["BMC", "BME", "MAI"],
-    horizontal=True
-)
 
 # Load and prepare prospects data
 @st.cache_data
@@ -101,7 +89,7 @@ def load_prospects():
     return df_prospects
 
 try:
-    df = load_data(data_source)
+    df = load_data()
     prospects_df = load_prospects()
 
     # Sidebar filters
