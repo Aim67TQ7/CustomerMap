@@ -226,9 +226,9 @@ try:
                 # Calculate marker size based on 3-year spend thresholds
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
                 try:
-                    spend = float(re.sub(r'[^\d.-]', '', spend_str)) if spend_str else 0
+                    spend = float(re.sub(r'[^\d.-]', '', spend_str)) if spend_str and spend_str != 'nan' else 0
                     # Set radius based on spend categories
-                    if spend > 500000:
+                    if isinstance(spend, (int, float)) and spend > 500000:
                         radius = 30  # Largest size
                     elif spend > 100000:
                         radius = 22  # Second largest

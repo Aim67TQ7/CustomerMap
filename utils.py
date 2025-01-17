@@ -69,7 +69,7 @@ def clean_phone_number(phone):
 
 def format_currency(value):
     """Format currency values consistently."""
-    if pd.isna(value) or value == ' $-   ' or value == '0':
+    if pd.isna(value) or value == ' $-   ' or value == '0' or value == '':
         return '$0'
         
     # Remove any existing formatting
@@ -78,7 +78,7 @@ def format_currency(value):
     
     # Handle empty or invalid strings
     if not value_str:
-        return 0.0
+        return '$0'
         
     try:
         # Convert to float and format
