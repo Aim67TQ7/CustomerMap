@@ -78,11 +78,11 @@ if not st.session_state.authenticated:
 @st.cache_data
 def load_data(data_source):
     if data_source == "BMC":
-        df = pd.read_csv("attached_assets/RealBMC.csv")
+        df = pd.read_csv("attached_assets/BMC.csv")
     elif data_source == "BME":
-        df = pd.read_csv("attached_assets/RealBME.csv")
+        df = pd.read_csv("attached_assets/BME.csv")
     else:  # MAI
-        df = pd.read_csv("attached_assets/RealMAI.csv")
+        df = pd.read_csv("attached_assets/MAI.csv")
     return clean_data(df)
 
 # Select data source
