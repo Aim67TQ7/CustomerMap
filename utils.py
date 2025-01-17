@@ -3,12 +3,28 @@ import re
 
 def clean_data(df):
     """Clean and prepare the customer data."""
+    # Standardize column names
+    column_mapping = {
+        'lat': 'Latitude',
+        'latitude': 'Latitude',
+        'lon': 'Longitude',
+        'longitude': 'Longitude',
+        'phone': 'Phone',
+        'territory': 'Territory',
+        'sales_rep': 'Sales Rep',
+        'prodcode': 'ProdCode',
+        'state': 'State/Prov'
+    }
+    
+    # Rename columns if they exist (case-insensitive)
+    for col in df.columns:
+        lower_col = col.lower()
+        for old_col, new_col in column_mapping.items():
+            if lower_col == old_col:
+                df = df.rename(columns={col: new_col})
+    
     # Remove rows with invalid coordinates
     df = df[df['Latitude'].notna() & df['Longitude'].notna()]
-    
-    # Remove rows with "Error" in coordinates
-    df = df[~(df['Latitude'].astype(str).str.contains('Error', na=False)) & 
-            ~(df['Longitude'].astype(str).str.contains('Error', na=False))]
     
     # Convert coordinates to float
     df['Latitude'] = pd.to_numeric(df['Latitude'], errors='coerce')
@@ -17,8 +33,15 @@ def clean_data(df):
     # Remove any rows where conversion to float failed
     df = df.dropna(subset=['Latitude', 'Longitude'])
     
-    # Clean phone numbers
-    df['Phone'] = df['Phone'].astype(str).apply(clean_phone_number)
+    # Clean phone numbers if Phone column exists
+    if 'Phone' in df.columns:
+        df['Phone'] = df['Phone'].astype(str).apply(clean_phone_number)
+    
+    # Ensure required columns exist
+    required_columns = ['Territory', 'Sales Rep', 'State/Prov', 'ProdCode']
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = ''
     
     return df
 
