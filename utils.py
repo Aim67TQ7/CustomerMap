@@ -1,27 +1,8 @@
-
 import pandas as pd
 import re
 
 def clean_data(df):
     """Clean and prepare the customer data."""
-    # Standardize column names
-    column_mapping = {
-        '3-year Spend': '3-year Spend',
-        'Name': 'Name',
-        'Name.1': 'Name',
-        'Territory': 'Territory',
-        'Sales Rep': 'Sales Rep',
-        'Phone': 'Phone',
-        'Latitude': 'Latitude',
-        'Longitude': 'Longitude',
-        'Corrected_Address': 'Corrected_Address'
-    }
-    
-    # Rename columns if they exist
-    for old_col, new_col in column_mapping.items():
-        if old_col in df.columns and old_col != new_col:
-            df = df.rename(columns={old_col: new_col})
-    
     # Remove rows with invalid coordinates
     df = df[df['Latitude'].notna() & df['Longitude'].notna()]
     
@@ -38,12 +19,6 @@ def clean_data(df):
     
     # Clean phone numbers
     df['Phone'] = df['Phone'].astype(str).apply(clean_phone_number)
-    
-    # Ensure required columns exist
-    required_columns = ['Name', 'Territory', 'Sales Rep', '3-year Spend', 'Phone', 'Latitude', 'Longitude', 'Corrected_Address']
-    for col in required_columns:
-        if col not in df.columns:
-            df[col] = ''
     
     return df
 
