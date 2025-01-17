@@ -135,6 +135,14 @@ try:
         if selected_sales_rep != "All":
             filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
 
+        # Get ProdCodes based on filtered data
+        prodcodes = sorted(filtered_df['ProdCode'].unique().tolist())
+        selected_prodcode = st.selectbox("Select ProdCode", ["All"] + prodcodes)
+
+        # Further filter based on ProdCode
+        if selected_prodcode != "All":
+            filtered_df = filtered_df[filtered_df['ProdCode'] == selected_prodcode]
+
         # Get customer names based on all applied filters
         customer_names = sorted(filtered_df['Name'].unique().tolist())
         st.subheader("Customer Search")
