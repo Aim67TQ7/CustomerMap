@@ -17,6 +17,10 @@ st.markdown("""
     .main {
         padding: 0rem 1rem;
     }
+    .element-container iframe {
+        border: 1px solid #ddd;
+        min-height: 600px;
+    }
     .stButton>button {
         width: 100%;
     }
@@ -588,7 +592,7 @@ try:
         st.rerun()
 
     # Display the map
-    folium_static(m, width=1200)
+    folium_static(m, width=1200, height=600)
 
     if st.session_state.selected_customer:
         selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
