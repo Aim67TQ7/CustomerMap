@@ -75,18 +75,30 @@ if not st.session_state.authenticated:
 def load_data(data_source):
     if data_source == "Customer Locations":
         df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
-    elif data_source == "Global Customer Locations":
-        df = pd.read_csv("attached_assets/CustomerGlobalGeoLocs.csv")
+    elif data_source == "BME Locations":
+        df = pd.read_csv("attached_assets/BME.csv")
     else:  # MAI Customer Locations
-        df = pd.read_csv("attached_assets/MAI_CustomerGeoLocs.csv")
+        df = pd.read_csv("attached_assets/MAI.csv")
     return clean_data(df)
 
-# Select data source
-data_source = st.radio(
-    "Select Data Source",
-    ["Customer Locations", "Global Customer Locations", "MAI Customer Locations"],
-    horizontal=True
-)
+# Create tabs for data source selection
+st.markdown("### Select Data Source")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    customer_selected = st.toggle("Customer Locations", value=True)
+with col2:
+    bme_selected = st.toggle("BME Locations")
+with col3:
+    mai_selected = st.toggle("MAI Locations")
+
+# Determine which data source to use based on toggles
+if customer_selected:
+    data_source = "Customer Locations"
+elif bme_selected:
+    data_source = "BME Locations"
+else:
+    data_source = "MAI Locations"
 
 # Load and prepare prospects data
 @st.cache_data
