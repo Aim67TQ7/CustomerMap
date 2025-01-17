@@ -59,3 +59,19 @@ def clean_phone_number(phone):
     if len(nums) >= 10:
         return f"({nums[-10:-7]}) {nums[-7:-4]}-{nums[-4:]}"
     return phone
+
+def format_currency(value):
+    """Format currency values consistently."""
+    if pd.isna(value) or value == ' $-   ' or value == '0':
+        return '$0'
+        
+    # Remove any existing formatting
+    value_str = str(value)
+    value_str = re.sub(r'[^\d.-]', '', value_str)
+    
+    try:
+        # Convert to float and format
+        amount = float(value_str)
+        return f"${amount:,.2f}"
+    except ValueError:
+        return '$0'
