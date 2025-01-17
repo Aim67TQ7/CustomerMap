@@ -16,7 +16,13 @@ def clean_data(df):
         'state': 'State/Prov',
         'state/prov': 'State/Prov',
         'stateprov': 'State/Prov',
-        'state/province': 'State/Prov'
+        'state/province': 'State/Prov',
+        'name': 'Name',
+        'company name': 'Name',
+        'customer name': 'Name',
+        '3-year spend': '3-year Spend',
+        '3 year spend': '3-year Spend',
+        'three year spend': '3-year Spend'
     }
     
     # Rename columns if they exist (case-insensitive)
