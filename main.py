@@ -116,8 +116,8 @@ try:
     with st.sidebar:
         st.header("Filters")
 
-        # Get initial unique values
-        states = sorted(df['State/Prov'].unique().tolist())
+        # Get initial unique values for states
+        states = sorted(df['Territory'].unique().tolist()) if 'Territory' in df.columns else []
 
         # State filter with multi-select (up to 4)
         selected_states = st.multiselect("Select States/Provinces (max 4)", states, max_selections=4)
@@ -353,7 +353,7 @@ try:
             function selectCustomer(name, lat, lon) {
                 // Add customer to selected customers for route planning
                 const customer = {name: name, lat: lat, lon: lon};
-                
+
                 if (selectedCustomers.has(name)) {
                     selectedCustomers.delete(name);
                 } else {
@@ -531,7 +531,7 @@ try:
         st.session_state.selected_customers = []
     if 'user_location' not in st.session_state:
         st.session_state.user_location = None
-        
+
     # Handle component value updates
     if st.session_state.get('_component_value'):
         try:
@@ -563,13 +563,13 @@ try:
     # Display route planning cards
     st.markdown("### Route Planning")
     create_route_cards()
-    
+
     # Add Plan Trip button
     if st.button("Plan Trip"):
         route = get_active_route()
         if len(route) >= 2:
             optimal_route = calculate_optimal_route(route)
-            
+
             # Draw optimal route on map
             coordinates = [(loc['lat'], loc['lon']) for loc in optimal_route]
             folium.PolyLine(
@@ -578,7 +578,7 @@ try:
                 color='red',
                 opacity=0.8
             ).add_to(m)
-            
+
             # Display route summary
             total_distance = 0
             st.markdown("### Route Summary")
@@ -623,11 +623,11 @@ try:
     # Display selected customer details in a placeholder card
     st.markdown("### Customer Details")
     details_placeholder = st.empty()
-    
+
     if st.session_state.selected_customers:
         selected_names = [c['name'] for c in st.session_state.selected_customers]
         selected_customer = st.selectbox("Select customer to view details:", selected_names)
-        
+
         if selected_customer:
             customer_data = filtered_df[filtered_df['Name'] == selected_customer]
             if not customer_data.empty:
@@ -665,3 +665,5 @@ try:
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
     st.write("Please check if the data file is in the correct location and format.")
+
+from geopy.distance import geodesic as haversine_distance
