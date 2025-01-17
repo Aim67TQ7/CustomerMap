@@ -17,6 +17,10 @@ st.markdown("""
     .main {
         padding: 0rem 1rem;
     }
+    .element-container iframe {
+        border: 1px solid #ddd;
+        min-height: 600px;
+    }
     .stButton>button {
         width: 100%;
     }
@@ -73,32 +77,20 @@ if not st.session_state.authenticated:
 # Load and clean data
 @st.cache_data
 def load_data(data_source):
-    if data_source == "Customer Locations":
-        df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
-    elif data_source == "BME Locations":
-        df = pd.read_csv("attached_assets/BME.csv")
-    else:  # MAI Customer Locations
-        df = pd.read_csv("attached_assets/MAI.csv")
+    if data_source == "BMC":
+        df = pd.read_csv("attached_assets/RealBMC.csv")
+    elif data_source == "BME":
+        df = pd.read_csv("attached_assets/RealBME.csv")
+    else:  # MAI
+        df = pd.read_csv("attached_assets/RealMAI.csv")
     return clean_data(df)
 
-# Create tabs for data source selection
-st.markdown("### Select Data Source")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    customer_selected = st.toggle("Customer Locations", value=True)
-with col2:
-    bme_selected = st.toggle("BME Locations")
-with col3:
-    mai_selected = st.toggle("MAI Locations")
-
-# Determine which data source to use based on toggles
-if customer_selected:
-    data_source = "Customer Locations"
-elif bme_selected:
-    data_source = "BME Locations"
-else:
-    data_source = "MAI Locations"
+# Select data source
+data_source = st.radio(
+    "Select Data Source",
+    ["BMC", "BME", "MAI"],
+    horizontal=True
+)
 
 # Load and prepare prospects data
 @st.cache_data
@@ -353,7 +345,7 @@ try:
             function selectCustomer(name, lat, lon) {
                 // Add customer to selected customers for route planning
                 const customer = {name: name, lat: lat, lon: lon};
-                
+
                 if (selectedCustomers.has(name)) {
                     selectedCustomers.delete(name);
                 } else {
@@ -531,7 +523,7 @@ try:
         st.session_state.selected_customers = []
     if 'user_location' not in st.session_state:
         st.session_state.user_location = None
-        
+
     # Handle component value updates
     if st.session_state.get('_component_value'):
         try:
@@ -563,13 +555,13 @@ try:
     # Display route planning cards
     st.markdown("### Route Planning")
     create_route_cards()
-    
+
     # Add Plan Trip button
     if st.button("Plan Trip"):
         route = get_active_route()
         if len(route) >= 2:
             optimal_route = calculate_optimal_route(route)
-            
+
             # Draw optimal route on map
             coordinates = [(loc['lat'], loc['lon']) for loc in optimal_route]
             folium.PolyLine(
@@ -578,7 +570,7 @@ try:
                 color='red',
                 opacity=0.8
             ).add_to(m)
-            
+
             # Display route summary
             total_distance = 0
             st.markdown("### Route Summary")
@@ -600,7 +592,7 @@ try:
         st.rerun()
 
     # Display the map
-    folium_static(m, width=1200)
+    folium_static(m, width=1200, height=600)
 
     if st.session_state.selected_customer:
         selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
@@ -623,11 +615,11 @@ try:
     # Display selected customer details in a placeholder card
     st.markdown("### Customer Details")
     details_placeholder = st.empty()
-    
+
     if st.session_state.selected_customers:
         selected_names = [c['name'] for c in st.session_state.selected_customers]
         selected_customer = st.selectbox("Select customer to view details:", selected_names)
-        
+
         if selected_customer:
             customer_data = filtered_df[filtered_df['Name'] == selected_customer]
             if not customer_data.empty:
