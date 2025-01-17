@@ -80,9 +80,9 @@ def load_data(data_source):
     if data_source == "BMC":
         df = pd.read_csv("attached_assets/BMC.csv")
     elif data_source == "BME":
-        df = pd.read_csv("attached_assets/bme.csv")
+        df = pd.read_csv("attached_assets/BME.csv")
     else:  # MAI
-        df = pd.read_csv("attached_assets/mai.csv")
+        df = pd.read_csv("attached_assets/MAI.csv")
     return clean_data(df)
 
 # Select data source
