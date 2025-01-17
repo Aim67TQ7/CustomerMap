@@ -653,3 +653,11 @@ try:
 except Exception as e:
     st.error(f"An error occurred while loading the data: {str(e)}")
     st.write("Please check if the data file is in the correct location and format.")
+
+import re
+from geopy.distance import geodesic
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    coords_1 = (lat1, lon1)
+    coords_2 = (lat2, lon2)
+    return geodesic(coords_1, coords_2).km
