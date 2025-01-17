@@ -74,8 +74,12 @@ def format_currency(value):
         
     # Remove any existing formatting
     value_str = str(value)
-    value_str = re.sub(r'[^\d.-]', '', value_str)
+    value_str = re.sub(r'[^\d.-]', '', value_str.strip())
     
+    # Handle empty or invalid strings
+    if not value_str:
+        return 0.0
+        
     try:
         # Convert to float and format
         amount = float(value_str)
