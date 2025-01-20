@@ -306,78 +306,13 @@ try:
         st.session_state.widget_clicked = None
 
     # Add JavaScript for customer selection and route planning
-    st.markdown("""
-        <script>
-            var selectedCustomers = new Map();
+    try:
+        st.markdown("""
+            <script>
+                var selectedCustomers = new Map();
 
-            function updateRouteCards() {
-                const selectedArray = Array.from(selectedCustomers.values());
-                window.parent.postMessage({
-                    type: 'streamlit:setComponentValue',
-                    value: JSON.stringify({
-                        type: 'route_selection',
-                        customers: selectedArray
-                    })
-                }, '*');
-            }
-
-            // Initialize selected customers from session state
-            window.addEventListener('message', function(e) {
-                if (e.data.type === 'streamlit:render') {
-                    try {
-                        if (e.data.componentValue) {
-                            const componentValue = JSON.parse(e.data.componentValue);
-                            if (Array.isArray(componentValue)) {
-                                selectedCustomers.clear();
-                                componentValue.forEach(customer => {
-                                    selectedCustomers.set(customer.name, customer);
-                                });
-                                updateAllButtons();
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Error parsing component value:', err);
-                    }
-                }
-            });
-
-            function updateAllButtons() {
-                document.querySelectorAll('button[data-name]').forEach(button => {
-                    const name = button.getAttribute('data-name');
-                    updateButtonStyle(button, selectedCustomers.has(name));
-                });
-            }
-
-            function updateButtonStyle(button, isSelected) {
-                const checkbox = button.querySelector('input[type="checkbox"]');
-                if (checkbox) {
-                    checkbox.checked = isSelected;
-                }
-            }
-
-            function selectCustomer(name, lat, lon) {
-                // Add customer to selected customers for route planning
-                const customer = {name: name, lat: lat, lon: lon};
-
-                if (selectedCustomers.has(name)) {
-                    selectedCustomers.delete(name);
-                } else {
-                    if (selectedCustomers.size >= 8) {
-                        alert('Maximum 8 locations can be selected for routing');
-                        return;
-                    }
-                    selectedCustomers.set(name, customer);
-                }
-
-                // Send updated selection to Streamlit
-                const selectedArray = Array.from(selectedCustomers.values());
-                if (typeof window.parent.streamlit !== 'undefined') {
-                    window.parent.streamlit.setComponentValue({
-                        type: 'route_selection',
-                        customers: selectedArray
-                    });
-                }
-                setTimeout(() => {
+                function updateRouteCards() {
+                    const selectedArray = Array.from(selectedCustomers.values());
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
                         value: JSON.stringify({
@@ -385,9 +320,75 @@ try:
                             customers: selectedArray
                         })
                     }, '*');
-                }, 100);
-            }
-        </script>
-    """, unsafe_allow_html=True)
+                }
 
-    #
+                // Initialize selected customers from session state
+                window.addEventListener('message', function(e) {
+                    if (e.data.type === 'streamlit:render') {
+                        try {
+                            if (e.data.componentValue) {
+                                const componentValue = JSON.parse(e.data.componentValue);
+                                if (Array.isArray(componentValue)) {
+                                    selectedCustomers.clear();
+                                    componentValue.forEach(customer => {
+                                        selectedCustomers.set(customer.name, customer);
+                                    });
+                                    updateAllButtons();
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error parsing component value:', err);
+                        }
+                    }
+                });
+
+                function updateAllButtons() {
+                    document.querySelectorAll('button[data-name]').forEach(button => {
+                        const name = button.getAttribute('data-name');
+                        updateButtonStyle(button, selectedCustomers.has(name));
+                    });
+                }
+
+                function updateButtonStyle(button, isSelected) {
+                    const checkbox = button.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = isSelected;
+                    }
+                }
+
+                function selectCustomer(name, lat, lon) {
+                    // Add customer to selected customers for route planning
+                    const customer = {name: name, lat: lat, lon: lon};
+
+                    if (selectedCustomers.has(name)) {
+                        selectedCustomers.delete(name);
+                    } else {
+                        if (selectedCustomers.size >= 8) {
+                            alert('Maximum 8 locations can be selected for routing');
+                            return;
+                        }
+                        selectedCustomers.set(name, customer);
+                    }
+
+                    // Send updated selection to Streamlit
+                    const selectedArray = Array.from(selectedCustomers.values());
+                    if (typeof window.parent.streamlit !== 'undefined') {
+                        window.parent.streamlit.setComponentValue({
+                            type: 'route_selection',
+                            customers: selectedArray
+                        });
+                    }
+                    setTimeout(() => {
+                        window.parent.postMessage({
+                            type: 'streamlit:setComponentValue',
+                            value: JSON.stringify({
+                                type: 'route_selection',
+                                customers: selectedArray
+                            })
+                        }, '*');
+                    }, 100);
+                }
+            </script>
+        """, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error adding JavaScript: {str(e)}")
