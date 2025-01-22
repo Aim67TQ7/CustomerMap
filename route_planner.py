@@ -54,7 +54,6 @@ def create_route_cards():
 
     active_cards = [card for card in st.session_state.route_cards if card]
     if not active_cards:
-        st.info("Select locations on the map to add them to your route.")
         return
 
     cols = st.columns(4)
