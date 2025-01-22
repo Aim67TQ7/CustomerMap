@@ -223,7 +223,6 @@ try:
                     <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
-                    <small style="color: #666;">(Double-click company name to plan route)</small>
                 </div>
                 """
 
