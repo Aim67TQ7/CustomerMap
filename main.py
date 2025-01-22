@@ -8,7 +8,7 @@ from utils import clean_data, format_currency
 st.set_page_config(
     page_title="Customer Location Viewer",
     page_icon="🌎",
-    layout="wide"
+    layout="wide" 
 )
 
 # Add custom CSS
@@ -76,27 +76,21 @@ if not st.session_state.authenticated:
 
 # Load and clean data
 @st.cache_data
-def load_data():
-    try:
-        df = pd.read_csv("attached_assets/CustomerGeoLocs.csv")
+def load_data(data_source):
+    if data_source == "BMC":
+        df = pd.read_csv("attached_assets/BMC.csv")
+    elif data_source == "BME":
+        df = pd.read_csv("attached_assets/BME.csv")
+    else:  # MAI
+        df = pd.read_csv("attached_assets/MAI.csv")
+    return clean_data(df)
 
-        # Log the data types of the DataFrame
-        st.write("Data Types of columns in CustomerGeoLocs:", df.dtypes)
-
-        # Converting relevant columns to numeric, if necessary
-        numeric_columns = ['Latitude', 'Longitude', '3-year Spend', '2024', '2023', '2022']
-        for col in numeric_columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-
-        # Log unique values for debugging
-        for col in df.columns:
-            if df[col].dtype == 'object':
-                unique_values = df[col].unique()
-                st.write(f"Unique values in {col}:", unique_values)
-
-        return clean_data(df)
-    except Exception as e:
-        st.error(f"An error occurred while loading the data: {e}")
+# Select data source
+data_source = st.radio(
+    "Select Data Source",
+    ["BMC", "BME", "MAI"],
+    horizontal=True
+)
 
 # Load and prepare prospects data
 @st.cache_data
@@ -107,7 +101,7 @@ def load_prospects():
     return df_prospects
 
 try:
-    df = load_data()
+    df = load_data(data_source)
     prospects_df = load_prospects()
 
     # Sidebar filters
@@ -141,14 +135,6 @@ try:
         if selected_sales_rep != "All":
             filtered_df = filtered_df[filtered_df['Sales Rep'] == selected_sales_rep]
 
-        # Get ProdCodes based on filtered data
-        prodcodes = sorted(filtered_df['ProdCode'].unique().tolist())
-        selected_prodcode = st.selectbox("Select ProdCode", ["All"] + prodcodes)
-
-        # Further filter based on ProdCode
-        if selected_prodcode != "All":
-            filtered_df = filtered_df[filtered_df['ProdCode'] == selected_prodcode]
-
         # Get customer names based on all applied filters
         customer_names = sorted(filtered_df['Name'].unique().tolist())
         st.subheader("Customer Search")
@@ -178,9 +164,9 @@ try:
                 <b>Territory:</b> {row['Territory']}<br>
                 <b>Sales Rep:</b> {row['Sales Rep']}<br>
                 <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                <b>2024:</b> {format_currency(row['2024 '])}<br>
-                <b>2023:</b> {format_currency(row['2023 '])}<br>
-                <b>2022:</b> {format_currency(row['2022 '])}<br>
+                <b>2024:</b> {format_currency(row['$2,024 '])}<br>
+                <b>2023:</b> {format_currency(row['$2,023 '])}<br>
+                <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                 <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                 <b>Address:</b> {row['Corrected_Address']}<br>
             </div>
@@ -232,9 +218,9 @@ try:
                     <b>Territory:</b> {row['Territory']}<br>
                     <b>Sales Rep:</b> {row['Sales Rep']}<br>
                     <b>3-year Spend:</b> {format_currency(row['3-year Spend'])}<br>
-                    <b>2024:</b> {format_currency(row['2024'])}<br>
-                    <b>2023:</b> {format_currency(row['2023'])}<br>
-                    <b>2022:</b> {format_currency(row['2022'])}<br>
+                    <b>2024:</b> {format_currency(row['$2,024 '])}<br>
+                    <b>2023:</b> {format_currency(row['$2,023 '])}<br>
+                    <b>2022:</b> {format_currency(row['$2,022 '])}<br>
                     <b>Phone:</b> {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}<br>
                     <b>Address:</b> {row['Corrected_Address']}<br>
                     <small style="color: #666;">(Double-click company name to plan route)</small>
@@ -244,9 +230,9 @@ try:
                 # Calculate marker size based on 3-year spend thresholds
                 spend_str = str(row['3-year Spend']).replace('$', '').replace(',', '').strip()
                 try:
-                    spend = float(re.sub(r'[^\d.-]', '', spend_str)) if spend_str and spend_str != 'nan' else 0
+                    spend = float(re.sub(r'[^\d.-]', '', spend_str)) if spend_str else 0
                     # Set radius based on spend categories
-                    if isinstance(spend, (int, float)) and spend > 500000:
+                    if spend > 500000:
                         radius = 30  # Largest size
                     elif spend > 100000:
                         radius = 22  # Second largest
@@ -275,7 +261,7 @@ try:
 
         # Add prospect markers
         for index, row in prospects_df.iterrows():
-            if pd.notna(row['Latitude']) and pd.notna(row['Longitude']):
+            if pd.notna(row['latitude']) and pd.notna(row['longitude']):
                 popup_content = f"""
                     <div style='min-width: 200px'>
                         <h4>Prospect: {row['Company Name']}</h4>
@@ -293,11 +279,12 @@ try:
                     </div>
                 """
                 folium.Marker(
-                    location=[float(row['Latitude']), float(row['Longitude'])],
+                    location=[float(row['latitude']), float(row['longitude'])],
                     popup=folium.Popup(popup_content, max_width=300),
                     tooltip=row['Company Name'],
                     icon=folium.Icon(color='green', icon='flag', prefix='fa')
                 ).add_to(m)
+
 
     # Store the selected customer and widget clicked state
     if 'selected_customer' not in st.session_state:
@@ -306,13 +293,78 @@ try:
         st.session_state.widget_clicked = None
 
     # Add JavaScript for customer selection and route planning
-    try:
-        st.markdown("""
-            <script>
-                var selectedCustomers = new Map();
+    st.markdown("""
+        <script>
+            var selectedCustomers = new Map();
 
-                function updateRouteCards() {
-                    const selectedArray = Array.from(selectedCustomers.values());
+            function updateRouteCards() {
+                const selectedArray = Array.from(selectedCustomers.values());
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: JSON.stringify({
+                        type: 'route_selection',
+                        customers: selectedArray
+                    })
+                }, '*');
+            }
+
+            // Initialize selected customers from session state
+            window.addEventListener('message', function(e) {
+                if (e.data.type === 'streamlit:render') {
+                    try {
+                        if (e.data.componentValue) {
+                            const componentValue = JSON.parse(e.data.componentValue);
+                            if (Array.isArray(componentValue)) {
+                                selectedCustomers.clear();
+                                componentValue.forEach(customer => {
+                                    selectedCustomers.set(customer.name, customer);
+                                });
+                                updateAllButtons();
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error parsing component value:', err);
+                    }
+                }
+            });
+
+            function updateAllButtons() {
+                document.querySelectorAll('button[data-name]').forEach(button => {
+                    const name = button.getAttribute('data-name');
+                    updateButtonStyle(button, selectedCustomers.has(name));
+                });
+            }
+
+            function updateButtonStyle(button, isSelected) {
+                const checkbox = button.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = isSelected;
+                }
+            }
+
+            function selectCustomer(name, lat, lon) {
+                // Add customer to selected customers for route planning
+                const customer = {name: name, lat: lat, lon: lon};
+
+                if (selectedCustomers.has(name)) {
+                    selectedCustomers.delete(name);
+                } else {
+                    if (selectedCustomers.size >= 8) {
+                        alert('Maximum 8 locations can be selected for routing');
+                        return;
+                    }
+                    selectedCustomers.set(name, customer);
+                }
+
+                // Send updated selection to Streamlit
+                const selectedArray = Array.from(selectedCustomers.values());
+                if (typeof window.parent.streamlit !== 'undefined') {
+                    window.parent.streamlit.setComponentValue({
+                        type: 'route_selection',
+                        customers: selectedArray
+                    });
+                }
+                setTimeout(() => {
                     window.parent.postMessage({
                         type: 'streamlit:setComponentValue',
                         value: JSON.stringify({
@@ -320,75 +372,288 @@ try:
                             customers: selectedArray
                         })
                     }, '*');
-                }
+                }, 100);
+            }
+        </script>
+    """, unsafe_allow_html=True)
 
-                // Initialize selected customers from session state
-                window.addEventListener('message', function(e) {
-                    if (e.data.type === 'streamlit:render') {
-                        try {
-                            if (e.data.componentValue) {
-                                const componentValue = JSON.parse(e.data.componentValue);
-                                if (Array.isArray(componentValue)) {
-                                    selectedCustomers.clear();
-                                    componentValue.forEach(customer => {
-                                        selectedCustomers.set(customer.name, customer);
-                                    });
-                                    updateAllButtons();
-                                }
+    # Initialize location tracking state
+    if 'location_tracking' not in st.session_state:
+        st.session_state.location_tracking = False
+
+    # Add location toggle
+    location_tracking = st.checkbox('Show My Location', value=st.session_state.location_tracking)
+
+    if location_tracking != st.session_state.location_tracking:
+        st.session_state.location_tracking = location_tracking
+        if location_tracking:
+            st.markdown("""
+                <script>
+                function updateLocation() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                window.parent.postMessage({
+                                    type: 'streamlit:setComponentValue',
+                                    value: JSON.stringify({
+                                        type: 'user_location',
+                                        lat: position.coords.latitude,
+                                        lon: position.coords.longitude
+                                    })
+                                }, '*');
+                                setTimeout(function() {
+                                    window.parent.location.reload();
+                                }, 100);
+                            },
+                            function(error) {
+                                console.error("Error getting location:", error.message);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 5000,
+                                maximumAge: 0
                             }
-                        } catch (err) {
-                            console.error('Error parsing component value:', err);
-                        }
-                    }
-                });
-
-                function updateAllButtons() {
-                    document.querySelectorAll('button[data-name]').forEach(button => {
-                        const name = button.getAttribute('data-name');
-                        updateButtonStyle(button, selectedCustomers.has(name));
-                    });
-                }
-
-                function updateButtonStyle(button, isSelected) {
-                    const checkbox = button.querySelector('input[type="checkbox"]');
-                    if (checkbox) {
-                        checkbox.checked = isSelected;
+                        );
                     }
                 }
+                updateLocation();
+                </script>
+            """, unsafe_allow_html=True)
+        else:
+            st.session_state.user_location = None
+            st.rerun()
 
-                function selectCustomer(name, lat, lon) {
-                    // Add customer to selected customers for route planning
-                    const customer = {name: name, lat: lat, lon: lon};
+    # Custom CSS for layout
+    st.markdown("""
+        <style>
+        .stApp {
+            margin: 0;
+            padding: 0;
+        }
+        .main {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+        }
+        .customer-list {
+            height: 600px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            margin-top: 0;
+            font-size: 0.5em;
+            background: white;
+        }
+        .customer-link {
+            display: block;
+            padding: 4px 8px;
+            margin: 1px 0;
+            text-decoration: none;
+            color: #1e88e5;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .customer-link:hover {
+            background-color: #f0f2f6;
+        }
+        .customer-link.selected {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+        .route-toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            margin: 10px 0;
+            cursor: pointer;
+            background: #f0f2f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .route-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .route-toggle input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        .route-toggle input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .route-toggle:hover {
+            background: #e3e6f0;
+        }
+        .toggle-slider {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            background-color: #ccc;
+            border-radius: 24px;
+            transition: .4s;
+            margin-right: 10px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            font-weight: bold;
+            color: #333;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-                    if (selectedCustomers.has(name)) {
-                        selectedCustomers.delete(name);
-                    } else {
-                        if (selectedCustomers.size >= 8) {
-                            alert('Maximum 8 locations can be selected for routing');
-                            return;
-                        }
-                        selectedCustomers.set(name, customer);
-                    }
+    # Initialize session state variables
+    if 'selected_customers' not in st.session_state:
+        st.session_state.selected_customers = []
+    if 'user_location' not in st.session_state:
+        st.session_state.user_location = None
 
-                    // Send updated selection to Streamlit
-                    const selectedArray = Array.from(selectedCustomers.values());
-                    if (typeof window.parent.streamlit !== 'undefined') {
-                        window.parent.streamlit.setComponentValue({
-                            type: 'route_selection',
-                            customers: selectedArray
-                        });
-                    }
-                    setTimeout(() => {
-                        window.parent.postMessage({
-                            type: 'streamlit:setComponentValue',
-                            value: JSON.stringify({
-                                type: 'route_selection',
-                                customers: selectedArray
-                            })
-                        }, '*');
-                    }, 100);
-                }
-            </script>
-        """, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Error adding JavaScript: {str(e)}")
+    # Handle component value updates
+    if st.session_state.get('_component_value'):
+        try:
+            selected = st.session_state._component_value
+            if isinstance(selected, str):
+                selected = eval(selected)
+            if isinstance(selected, dict):
+                if selected.get('type') == 'route_selection':
+                    customers = selected.get('customers', [])
+                    st.session_state.selected_customers = customers
+                    if customers:
+                        # Select the first customer in the route for details display
+                        st.session_state.selected_customer = customers[0]['name']
+                    st.rerun()
+        except Exception as e:
+            st.error(f"Error handling selection: {str(e)}")
+
+    # Add user location marker if available
+    if st.session_state.user_location:
+        folium.Marker(
+            location=[st.session_state.user_location['lat'], st.session_state.user_location['lon']],
+            popup='Your Location',
+            icon=folium.Icon(color='green', icon='user', prefix='fa'),
+            tooltip='Your Location'
+        ).add_to(m)
+
+    from route_planner import create_route_cards, calculate_optimal_route, clear_route_cards, get_active_route
+
+    # Display route planning cards
+    st.markdown("### Route Planning")
+    create_route_cards()
+
+    # Add Plan Trip button
+    if st.button("Plan Trip"):
+        route = get_active_route()
+        if len(route) >= 2:
+            optimal_route = calculate_optimal_route(route)
+
+            # Draw optimal route on map
+            coordinates = [(loc['lat'], loc['lon']) for loc in optimal_route]
+            folium.PolyLine(
+                coordinates,
+                weight=2,
+                color='red',
+                opacity=0.8
+            ).add_to(m)
+
+            # Display route summary
+            total_distance = 0
+            st.markdown("### Route Summary")
+            for i in range(len(optimal_route)):
+                st.write(f"{i+1}. {optimal_route[i]['name']}")
+                if i < len(optimal_route) - 1:
+                    dist = haversine_distance(
+                        optimal_route[i]['lat'], optimal_route[i]['lon'],
+                        optimal_route[i+1]['lat'], optimal_route[i+1]['lon']
+                    )
+                    total_distance += dist
+            st.write(f"\nTotal distance: {total_distance:.1f} km")
+        else:
+            st.warning("Please select at least 2 locations for route planning")
+
+    # Clear route button
+    if st.button("Clear Route"):
+        clear_route_cards()
+        st.rerun()
+
+    # Display the map
+    folium_static(m, width=1200, height=600)
+
+    if st.session_state.selected_customer:
+        selected_data = filtered_df[filtered_df['Name'] == st.session_state.selected_customer]
+        if not selected_data.empty:
+            lat = selected_data['Latitude'].iloc[0]
+            lon = selected_data['Longitude'].iloc[0]
+
+            # Add selected customer marker
+            folium.Marker(
+                location=[lat, lon],
+                popup=selected_data['Name'].iloc[0],
+                icon=folium.Icon(color='red', icon='info-sign')
+            ).add_to(m)
+
+    # Handle customer selection
+    if st.session_state.widget_clicked:
+        st.session_state.selected_customer = st.session_state.widget_clicked
+        st.rerun()
+
+    # Display selected customer details in a placeholder card
+    st.markdown("### Customer Details")
+    details_placeholder = st.empty()
+
+    if st.session_state.selected_customers:
+        selected_names = [c['name'] for c in st.session_state.selected_customers]
+        selected_customer = st.selectbox("Select customer to view details:", selected_names)
+
+        if selected_customer:
+            customer_data = filtered_df[filtered_df['Name'] == selected_customer]
+            if not customer_data.empty:
+                row = customer_data.iloc[0]
+                with details_placeholder.container():
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.markdown(f"### {row['Name']}")
+                        st.write(f"**Territory:** {row['Territory']}")
+                        st.write(f"**Sales Rep:** {row['Sales Rep']}")
+                        st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
+                        st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
+                        st.write(f"**Address:** {row['Corrected_Address']}")
+                    with col2:
+                        if st.button("Remove from Route", key=f"remove_{selected_customer}"):
+                            st.session_state.selected_customers = [
+                                c for c in st.session_state.selected_customers 
+                                if c['name'] != selected_customer
+                            ]
+                            st.rerun()
+    else:
+        details_placeholder.info("Select customers on the map to view their details here.")
+
+    if search_term and search_term != "All":
+        search_results = filtered_df[filtered_df['Name'] == search_term]
+
+        for _, row in search_results.iterrows():
+            with st.expander(row['Name']):
+                st.write(f"**Territory:** {row['Territory']}")
+                st.write(f"**Sales Rep:** {row['Sales Rep']}")
+                st.write(f"**3-year Spend:** {format_currency(row['3-year Spend'])}")
+                st.write(f"**Phone:** {row['Phone'] if pd.notna(row['Phone']) else 'N/A'}")
+                st.write(f"**Address:** {row['Corrected_Address']}")
+
+except Exception as e:
+    st.error(f"An error occurred while loading the data: {str(e)}")
+    st.write("Please check if the data file is in the correct location and format.")
